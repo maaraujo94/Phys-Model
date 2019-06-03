@@ -606,26 +606,18 @@ void minuitFunction(int& nDim, double* gout, double& result, double par[], int f
   result=myFunction(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16], par[17], par[18], par[19], par[20], par[21], par[22], par[23], par[24], par[25], par[26], par[27], par[28], par[29], par[30], par[31], par[32], par[33], par[34], par[35], par[36]);
 }
 
-
 //main function: collects data, does the fit, plots the results
 void fit()
 {
   //define variables
   
-  ifstream file;
   ofstream outf;
-  std::string data;
-  int ns[18]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  char nums[12][100];
-  double param[36];
-  //mudar para 0 se tudo correr bem
-  double ptmmin=2.;
-  int stateid=0, counter=0;
-  int ndf;
+  const int nstates = 18;
+  int counter = 0, ndf, ns[nstates] = {0};
+  double param[36], ptmmin = 2., minimum, chinorm, chiprob;
   
   int pos_psip=0, pos_chic2=0, pos_chic1=0, pos_jpsi=0, pos_ups3=0, pos_ups2=0, pos_ups1=0;
   double pt_psip=100, pt_chic2=100, pt_chic1=100, pt_jpsi=100, pt_ups3=100, pt_ups2=100, pt_ups1=100;
-  double minimum, chinorm, chiprob, aux;
 
   //////////////////////////////////
   //part: getting data from files
