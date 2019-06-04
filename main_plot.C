@@ -21,22 +21,15 @@ vector <vector <double> > datasigma(10);
 //psi', chi_c2, chi_c1, jpsi, ups(3S), ups(2S), ups(1S)
 float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
 
-////////////////////////////////////////////////////////////////////////////////////////////
-//part: definition of auxiliary functions to obtain sig(pT, y, sqrt(s)/M, fitting params)
-///////////////////////////////////////////////////////////////////////////////////////////
-
 void plot()
 {
+  gROOT->SetBatch(1);
+  
   ifstream file;
   ofstream tex;
-  std::string data;
-  int ns[18]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  char nums[12][100];
-  double param[36];
-  double eparam[36];
-  double ptmmin=0;
-  int stateid=0, counter=0;
-  int ndf;
+  int ns[18]={0};
+  double param[36], eparam[36], ptmmin = 0;
+  int counter = 0, ndf;
   
   int pos_psip=0, pos_chic2=0, pos_chic1=0, pos_jpsi=0, pos_ups3=0, pos_ups2=0, pos_ups1=0;
   double pt_psip=100, pt_chic2=100, pt_chic1=100, pt_jpsi=100, pt_ups3=100, pt_ups2=100, pt_ups1=100;
