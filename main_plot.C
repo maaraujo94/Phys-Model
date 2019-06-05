@@ -28,14 +28,14 @@ void plot()
   ifstream file;
   ofstream tex;
   int ns[18]={0};
-  double param[36], eparam[36], ptmmin = 0;
+  double param[32], eparam[32], ptmmin = 0;
   int counter = 0, ndf;
   
   int pos_psip=0, pos_chic2=0, pos_chic1=0, pos_jpsi=0, pos_ups3=0, pos_ups2=0, pos_ups1=0;
   double pt_psip=100, pt_chic2=100, pt_chic1=100, pt_jpsi=100, pt_ups3=100, pt_ups2=100, pt_ups1=100;
   double minimum, chinorm, chiprob, cs_psip, cs_chic2, cs_chic1, cs_jpsi, cs_ups3, cs_ups2, cs_chib2, cs_chib1, cs_ups1, lambda_chic2, lambda_chic1, lambda_jpsi, lambda_ups3, lambda_ups2, lambda_chib2, lambda_chib1, lambda_ups1, ratio, aux;
 
-  double dataout[75];
+  double dataout[67];
 
   //////////////////////////////////
   //part: getting data from files
@@ -46,21 +46,18 @@ void plot()
   //part: reading fit results
 
   file.open("fit.txt");
-  for(int i=0; i<75; i++)
+  for(int i=0; i<67; i++)
     file >> dataout[i];
-  for(int i=0; i<36; i++)
+  for(int i=0; i<32; i++)
     param[i] = dataout[i];
-  for(int i=0; i<36; i++)
-    eparam[i] = dataout[i+36];
-  //for(int i=18; i<31; i++)
-  //  param[i] = 1;
-  ptmmin = dataout[72];
-  //ptmmin = 1e-5;
-  minimum = dataout[73];
-  ndf = dataout[74];
+  for(int i=0; i<32; i++)
+    eparam[i] = dataout[i+32];
+  ptmmin = dataout[64];
+  minimum = dataout[65];
+  ndf = dataout[66];
   chiprob = TMath::Prob(minimum, ndf);
 
-  char names[36][100] = {"L_{\\psi(2S)}","L_{\\chi_{c2}}","L_{\\chi_{c1}}","L_{J/\\psi}","L_{\\Upsilon(3S)}","L_{\\Upsilon(2S)}","L_{\\chi_{b2}}","L_{\\chi_{b1}}","L_{\\Upsilon(1S)}","A","\\beta","\\tau","\\rho","\\delta","b","c","d","e","BR_{ppdm}","BR_{ppjdp}","BR_{c2jpsi}","BR_{c1jpsi}","BR_{jpsidm}","BR_{b2ups1}","BR_{b1ups1}","BR_{ups3dm}","BR_{ups2dm}","BR_{ups1dm}","L_{CMS}","L_{ATLAS}","L_{ATLAS}(\\Upsilon)","L(13/7)_{c\\overline c}","L(13/7)_{b\\overline b}","L_{CMS}(13)","\\Delta M_{c\\overline c}","\\Delta M_{b\\overline b}"};
+  char names[32][100] = {"L_{\\psi(2S)}","L_{\\chi_{c2}}","L_{\\chi_{c1}}","L_{J/\\psi}","L_{\\Upsilon(3S)}","L_{\\Upsilon(2S)}","L_{\\chi_{b2}}","L_{\\chi_{b1}}","L_{\\Upsilon(1S)}","A","\\beta","\\tau","\\rho","\\delta","b","c","d","e","BR_{ppdm}","BR_{ppjdp}","BR_{c2jpsi}","BR_{c1jpsi}","BR_{jpsidm}","BR_{b2ups1}","BR_{b1ups1}","BR_{ups3dm}","BR_{ups2dm}","BR_{ups1dm}","L_{CMS}","L_{ATLAS}","L_{ATLAS}(\\Upsilon)","L_{CMS}(13)"};
   
   tex.open("plots/fitp.tex");
 
@@ -69,7 +66,7 @@ void plot()
   tex << "\\begin{tabular}{c|c|c}" << endl;
   tex << "Parameter & Value & Uncertainty \\\\" << endl;
   tex << "\\hline" << endl;
-  for(int i=0; i<36; i++)
+  for(int i=0; i<32; i++)
     {
       tex << "$" << names[i] << "$ & " << param[i] << " & ";
       if(eparam[i]==0) tex << "fixed \\\\" << endl;
@@ -91,7 +88,7 @@ void plot()
   float datapsipccs[5][npsipccs];
   for(int i=0; i<npsipccs; i++)
     {
-      datapsipccs[0][i]=avgptm(datasigma[5][i], datasigma[6][i], datasigma[7][i], datasigma[8][i], datasigma[9][i]/(param[34]+mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17], 0);
+      datapsipccs[0][i]=avgptm(datasigma[5][i], datasigma[6][i], datasigma[7][i], datasigma[8][i], datasigma[9][i]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
       datapsipccs[1][i]=datasigma[1][i]*param[28]*param[18];
       datapsipccs[2][i]=datasigma[2][i]*param[28]*param[18];
       datapsipccs[3][i]=datapsipccs[0][i]-datasigma[5][i];
@@ -104,7 +101,7 @@ void plot()
   float datapsipacs[5][npsipacs];
   for(int i=0; i<npsipacs; i++)
     {
-      datapsipacs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17], 0);
+      datapsipacs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
       datapsipacs[1][i]=datasigma[1][i+counter]*param[29]*param[19]*param[22];
       datapsipacs[2][i]=datasigma[2][i+counter]*param[29]*param[19]*param[22];
       datapsipacs[3][i]=datapsipacs[0][i]-datasigma[5][i+counter];
@@ -139,16 +136,16 @@ void plot()
 
   //plot the fitted function and each contribution
   TF1 *fitpsipcs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitpsipcs->SetParameter(0, datasigma[9][0]/(param[34]+mass[0]));
+  fitpsipcs->SetParameter(0, datasigma[9][0]/(mass[0]));
   fitpsipcs->SetParameter(1, datasigma[8][0]/2);
   for(int i=2; i<7; i++)
     fitpsipcs->SetParameter(i, param[i+7]);
   fitpsipcs->SetParameter(7, param[0]);
-  fitpsipcs->SetParameter(8, param[34]+mass[0]);
+  fitpsipcs->SetParameter(8, mass[0]);
   for(int i=9; i<13; i++)
     fitpsipcs->SetParameter(i, param[i+5]);
-  fitpsipcs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitpsipcs->SetParameter(14, param[34]+mass[0]);
+  fitpsipcs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitpsipcs->SetParameter(14, mass[0]);
   fitpsipcs->SetLineColor(kBlue);
   fitpsipcs->Draw("lsame");
   
@@ -177,7 +174,7 @@ void plot()
   float datachic2cs[5][nchic2cs];  
   for(int i=0; i<nchic2cs; i++)
     {
-      datachic2cs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[1]), param[9], param[10], param[11], param[12], param[13], param[1], param[34]+mass[1], param[14], param[15], param[16], param[17], 1);
+      datachic2cs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[1]), param[9], param[10], param[11], param[12], param[13], param[1], mass[1], param[14], param[15], param[16], param[17], 1);
       datachic2cs[1][i]=datasigma[1][i+counter]*param[29]*param[20]*param[22];
       datachic2cs[2][i]=datasigma[2][i+counter]*param[29]*param[20]*param[22];
       datachic2cs[3][i]=datachic2cs[0][i]-datasigma[5][i+counter];
@@ -202,16 +199,16 @@ void plot()
   
   //plot the fitted function and the direct contributions
   TF1 *fitchic2cs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitchic2cs->SetParameter(0, datasigma[9][counter]/(param[34]+mass[1]));
+  fitchic2cs->SetParameter(0, datasigma[9][counter]/(mass[1]));
   fitchic2cs->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitchic2cs->SetParameter(i, param[i+7]);
   fitchic2cs->SetParameter(7, param[1]);
-  fitchic2cs->SetParameter(8, param[34]+mass[1]);
+  fitchic2cs->SetParameter(8, mass[1]);
   for(int i=9; i<13; i++)
     fitchic2cs->SetParameter(i, param[i+5]);
-  fitchic2cs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitchic2cs->SetParameter(14, param[34]+mass[0]);
+  fitchic2cs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitchic2cs->SetParameter(14, mass[0]);
   fitchic2cs->SetLineColor(kBlue);
   fitchic2cs->Draw("lsame");
  
@@ -239,7 +236,7 @@ void plot()
   float datachic1cs[5][nchic1cs];  
   for(int i=0; i<nchic1cs; i++)
     {
-      datachic1cs[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[2]), param[9], param[10], param[11], param[12], param[13], param[2], param[34]+mass[2], param[14], param[15], param[16], param[17], 2);
+      datachic1cs[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[2]), param[9], param[10], param[11], param[12], param[13], param[2], mass[2], param[14], param[15], param[16], param[17], 2);
       datachic1cs[1][i]=datasigma[1][i+counter]*param[29]*param[21]*param[22];
       datachic1cs[2][i]=datasigma[2][i+counter]*param[29]*param[21]*param[22];
       datachic1cs[3][i]=datachic1cs[0][i]-datasigma[5][i+counter];
@@ -264,16 +261,16 @@ void plot()
   
   //plot the fitted function and the direct contributions
   TF1 *fitchic1cs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitchic1cs->SetParameter(0, datasigma[9][counter]/(param[34]+mass[2]));
+  fitchic1cs->SetParameter(0, datasigma[9][counter]/(mass[2]));
   fitchic1cs->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitchic1cs->SetParameter(i, param[i+7]);
   fitchic1cs->SetParameter(7, param[2]);
-  fitchic1cs->SetParameter(8, param[34]+mass[2]);
+  fitchic1cs->SetParameter(8, mass[2]);
   for(int i=9; i<13; i++)
     fitchic1cs->SetParameter(i, param[i+5]);
-  fitchic1cs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitchic1cs->SetParameter(14, param[34]+mass[0]);
+  fitchic1cs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitchic1cs->SetParameter(14, mass[0]);
   fitchic1cs->SetLineColor(kBlue);
   fitchic1cs->Draw("lsame");
 
@@ -301,7 +298,7 @@ void plot()
   float datajpsics[5][njpsics];
   for(int i=0; i<njpsics; i++)
     {
-      datajpsics[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], param[34]+mass[3], param[14], param[15], param[16], param[17], 3);
+      datajpsics[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17], 3);
       datajpsics[1][i]=datasigma[1][i+counter]*param[28]*param[22];
       datajpsics[2][i]=datasigma[2][i+counter]*param[28]*param[22];
       datajpsics[3][i]=datajpsics[0][i]-datasigma[5][i+counter];
@@ -326,16 +323,16 @@ void plot()
 
   //plot the fitted function
   TF1 *fitjpsics = new TF1("jpsi cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitjpsics->SetParameter(0, datasigma[9][counter]/(param[34]+mass[3]));
+  fitjpsics->SetParameter(0, datasigma[9][counter]/(mass[3]));
   fitjpsics->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitjpsics->SetParameter(i, param[i+7]);
   fitjpsics->SetParameter(7, param[3]);
-  fitjpsics->SetParameter(8, param[34]+mass[3]);
+  fitjpsics->SetParameter(8, mass[3]);
   for(int i=9; i<13; i++)
     fitjpsics->SetParameter(i, param[i+5]);
-  fitjpsics->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitjpsics->SetParameter(14, param[34]+mass[0]);
+  fitjpsics->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitjpsics->SetParameter(14, mass[0]);
   fitjpsics->SetLineColor(kBlue);
   fitjpsics->Draw("lsame");
   
@@ -385,7 +382,7 @@ void plot()
 
   //plot the fitted function
   TF1 *fitchicr = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [13], [9], [10], [11], [12])/sigplot([0], x, [1], [2], [3], [4], [5], [6], [8], [13], [9], [10], [11], [12])", 0, 10);
-  fitchicr->SetParameter(0, datasigma[9][counter]/(param[34]+mass[3]));
+  fitchicr->SetParameter(0, datasigma[9][counter]/(mass[3]));
   fitchicr->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitchicr->SetParameter(i, param[i+7]);
@@ -393,7 +390,7 @@ void plot()
   fitchicr->SetParameter(8, param[2]);
   for(int i=9; i<13; i++)
     fitchicr->SetParameter(i, param[i+5]);
-  fitchicr->SetParameter(13, param[34]+mass[3]);
+  fitchicr->SetParameter(13, mass[3]);
   fitchicr->SetLineColor(kBlue);
   fitchicr->Draw("lsame");
   
@@ -443,7 +440,7 @@ void plot()
 
   //plot the fitted function
   TF1 *fitchibr = new TF1("chib2/chib1 ratio fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [13], [9], [10], [11], [12])/sigplot([0], x, [1], [2], [3], [4], [5], [6], [8], [13], [9], [10], [11], [12])", 0, 10);
-  fitchibr->SetParameter(0, datasigma[9][counter]/(param[35]+mass[6]));
+  fitchibr->SetParameter(0, datasigma[9][counter]/(mass[6]));
   fitchibr->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitchibr->SetParameter(i, param[i+7]);
@@ -451,7 +448,7 @@ void plot()
   fitchibr->SetParameter(8, param[7]);
   for(int i=9; i<13; i++)
     fitchibr->SetParameter(i, param[i+5]);
-  fitchibr->SetParameter(13, param[35]+mass[6]);
+  fitchibr->SetParameter(13, mass[6]);
   fitchibr->SetLineColor(kBlue);
   fitchibr->Draw("lsame");
   
@@ -477,7 +474,7 @@ void plot()
   float dataups3ccs[5][nups3ccs];
   for(int i=0; i<nups3ccs; i++)
     {
-      dataups3ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17], 4);
+      dataups3ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
       dataups3ccs[1][i]=datasigma[1][i+counter]*param[28]*param[25];
       dataups3ccs[2][i]=datasigma[2][i+counter]*param[28]*param[25];
       dataups3ccs[3][i]=dataups3ccs[0][i]-datasigma[5][i+counter];
@@ -490,7 +487,7 @@ void plot()
   float dataups3acs[5][nups3acs];
   for(int i=0; i<nups3acs; i++)
     {
-      dataups3acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17], 4);
+      dataups3acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
       dataups3acs[1][i]=datasigma[1][i+counter]*param[25]*param[30];
       dataups3acs[2][i]=datasigma[2][i+counter]*param[25]*param[30];
       dataups3acs[3][i]=dataups3acs[0][i]-datasigma[5][i+counter];
@@ -524,16 +521,16 @@ void plot()
   
   //plot the fitted function and each contribution
   TF1 *fitups3cs = new TF1("ups3 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups3cs->SetParameter(0, datasigma[9][counter]/(param[35]+mass[4]));
+  fitups3cs->SetParameter(0, datasigma[9][counter]/(mass[4]));
   fitups3cs->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups3cs->SetParameter(i, param[i+7]);
   fitups3cs->SetParameter(7, param[4]);
-  fitups3cs->SetParameter(8, param[35]+mass[4]);
+  fitups3cs->SetParameter(8, mass[4]);
   for(int i=9; i<13; i++)
     fitups3cs->SetParameter(i, param[i+5]);
-  fitups3cs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups3cs->SetParameter(14, param[34]+mass[0]);
+  fitups3cs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups3cs->SetParameter(14, mass[0]);
   fitups3cs->SetLineColor(kBlue);
   fitups3cs->Draw("lsame");
   
@@ -560,7 +557,7 @@ void plot()
   float dataups2ccs[5][nups2ccs];
   for(int i=0; i<nups2ccs; i++)
     {
-      dataups2ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17], 5);
+      dataups2ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
       dataups2ccs[1][i]=datasigma[1][i+counter]*param[28]*param[26];
       dataups2ccs[2][i]=datasigma[2][i+counter]*param[28]*param[26];
       dataups2ccs[3][i]=dataups2ccs[0][i]-datasigma[5][i+counter];
@@ -573,7 +570,7 @@ void plot()
   float dataups2acs[5][nups2acs];
   for(int i=0; i<nups2acs; i++)
     {
-      dataups2acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17], 5);
+      dataups2acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
       dataups2acs[1][i]=datasigma[1][i+counter]*param[30]*param[26];
       dataups2acs[2][i]=datasigma[2][i+counter]*param[30]*param[26];
       dataups2acs[3][i]=dataups2acs[0][i]-datasigma[5][i+counter];
@@ -607,16 +604,16 @@ void plot()
 
   //plot the fitted function and each contribution
   TF1 *fitups2cs = new TF1("ups2 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups2cs->SetParameter(0, datasigma[9][counter]/(param[35]+mass[5]));
+  fitups2cs->SetParameter(0, datasigma[9][counter]/(mass[5]));
   fitups2cs->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups2cs->SetParameter(i, param[i+7]);
   fitups2cs->SetParameter(7, param[5]);
-  fitups2cs->SetParameter(8, param[35]+mass[5]);
+  fitups2cs->SetParameter(8, mass[5]);
   for(int i=9; i<13; i++)
     fitups2cs->SetParameter(i, param[i+5]);
-  fitups2cs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups2cs->SetParameter(14, param[34]+mass[0]);
+  fitups2cs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups2cs->SetParameter(14, mass[0]);
   fitups2cs->SetLineColor(kBlue);
   fitups2cs->Draw("lsame");
 
@@ -643,7 +640,7 @@ void plot()
   float dataups1ccs[5][nups1ccs];
   for(int i=0; i<nups1ccs; i++)
     {
-      dataups1ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17], 6);
+      dataups1ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
       dataups1ccs[1][i]=datasigma[1][i+counter]*param[28]*param[27];
       dataups1ccs[2][i]=datasigma[2][i+counter]*param[28]*param[27];
       dataups1ccs[3][i]=dataups1ccs[0][i]-datasigma[5][i+counter];
@@ -656,7 +653,7 @@ void plot()
   float dataups1acs[5][nups1acs];
   for(int i=0; i<nups1acs; i++)
     {
-      dataups1acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17], 6);
+      dataups1acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
       dataups1acs[1][i]=datasigma[1][i+counter]*param[30]*param[27];
       dataups1acs[2][i]=datasigma[2][i+counter]*param[30]*param[27];
       dataups1acs[3][i]=dataups1acs[0][i]-datasigma[5][i+counter];
@@ -690,16 +687,16 @@ void plot()
   
   //plot the fitted function and each contribution
   TF1 *fitups1cs = new TF1("ups1 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups1cs->SetParameter(0, datasigma[9][counter]/(param[35]+mass[6]));
+  fitups1cs->SetParameter(0, datasigma[9][counter]/(mass[6]));
   fitups1cs->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups1cs->SetParameter(i, param[i+7]);
   fitups1cs->SetParameter(7, param[8]);
-  fitups1cs->SetParameter(8, param[35]+mass[6]);
+  fitups1cs->SetParameter(8, mass[6]);
   for(int i=9; i<13; i++)
     fitups1cs->SetParameter(i, param[i+5]);
-  fitups1cs->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups1cs->SetParameter(14, param[34]+mass[0]);
+  fitups1cs->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups1cs->SetParameter(14, mass[0]);
   fitups1cs->SetLineColor(kBlue);
   fitups1cs->Draw("lsame");
 
@@ -726,9 +723,9 @@ void plot()
   float datapsipccs13[5][npsipccs13];
   for(int i=0; i<npsipccs13; i++)
     {
-      datapsipccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17], 0);
-      datapsipccs13[1][i]=datasigma[1][i+counter]*param[33]*param[18];
-      datapsipccs13[2][i]=datasigma[2][i+counter]*param[33]*param[18];
+      datapsipccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
+      datapsipccs13[1][i]=datasigma[1][i+counter]*param[31]*param[18];
+      datapsipccs13[2][i]=datasigma[2][i+counter]*param[31]*param[18];
       datapsipccs13[3][i]=datapsipccs13[0][i]-datasigma[5][i+counter];
       datapsipccs13[4][i]=datasigma[6][i+counter]-datapsipccs13[0][i];
     }
@@ -752,18 +749,17 @@ void plot()
   pcsection13->Draw("P");
 
   //plot the fitted function and each contribution
-  TF1 *fitpsipcs13 = new TF1("psip13 cs fit", "[15]*sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitpsipcs13->SetParameter(0, datasigma[9][counter]/(param[34]+mass[0]));
+  TF1 *fitpsipcs13 = new TF1("psip13 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
+  fitpsipcs13->SetParameter(0, datasigma[9][counter]/(mass[0]));
   fitpsipcs13->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitpsipcs13->SetParameter(i, param[i+7]);
   fitpsipcs13->SetParameter(7, param[0]);
-  fitpsipcs13->SetParameter(8, param[34]+mass[0]);
+  fitpsipcs13->SetParameter(8, mass[0]);
   for(int i=9; i<13; i++)
     fitpsipcs13->SetParameter(i, param[i+5]);
-  fitpsipcs13->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitpsipcs13->SetParameter(14, param[34]+mass[0]);
-  fitpsipcs13->SetParameter(15, param[31]);
+  fitpsipcs13->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitpsipcs13->SetParameter(14, mass[0]);
   fitpsipcs13->SetLineColor(kBlue);
   fitpsipcs13->Draw("lsame");
 
@@ -791,9 +787,9 @@ void plot()
   float datajpsics13[5][njpsics13];
   for(int i=0; i<njpsics13; i++)
     {
-      datajpsics13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[34]+mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], param[34]+mass[3], param[14], param[15], param[16], param[17], 3);
-      datajpsics13[1][i]=datasigma[1][i+counter]*param[33]*param[22];
-      datajpsics13[2][i]=datasigma[2][i+counter]*param[33]*param[22];
+      datajpsics13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17], 3);
+      datajpsics13[1][i]=datasigma[1][i+counter]*param[31]*param[22];
+      datajpsics13[2][i]=datasigma[2][i+counter]*param[31]*param[22];
       datajpsics13[3][i]=datajpsics13[0][i]-datasigma[5][i+counter];
       datajpsics13[4][i]=datasigma[6][i+counter]-datajpsics13[0][i];
     }
@@ -816,18 +812,17 @@ void plot()
   jsection13->Draw("P");
 
   //plot the fitted function
-  TF1 *fitjpsics13 = new TF1("jpsi cs fit", "[15]*sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitjpsics13->SetParameter(0, datasigma[9][counter]/(param[34]+mass[3]));
+  TF1 *fitjpsics13 = new TF1("jpsi cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
+  fitjpsics13->SetParameter(0, datasigma[9][counter]/(mass[3]));
   fitjpsics13->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitjpsics13->SetParameter(i, param[i+7]);
   fitjpsics13->SetParameter(7, param[3]);
-  fitjpsics13->SetParameter(8, param[34]+mass[3]);
+  fitjpsics13->SetParameter(8, mass[3]);
   for(int i=9; i<13; i++)
     fitjpsics13->SetParameter(i, param[i+5]);
-  fitjpsics13->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitjpsics13->SetParameter(14, param[34]+mass[0]);
-  fitjpsics13->SetParameter(15, param[31]);
+  fitjpsics13->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitjpsics13->SetParameter(14, mass[0]);
   fitjpsics13->SetLineColor(kBlue);
   fitjpsics13->Draw("lsame");
 
@@ -853,9 +848,9 @@ void plot()
   float dataups3ccs13[5][nups3ccs13];
   for(int i=0; i<nups3ccs13; i++)
     {
-      dataups3ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17], 4);
-      dataups3ccs13[1][i]=datasigma[1][i+counter]*param[33]*param[25];
-      dataups3ccs13[2][i]=datasigma[2][i+counter]*param[33]*param[25];
+      dataups3ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
+      dataups3ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[25];
+      dataups3ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[25];
       dataups3ccs13[3][i]=dataups3ccs13[0][i]-datasigma[5][i+counter];
       dataups3ccs13[4][i]=datasigma[6][i+counter]-dataups3ccs13[0][i];
     }
@@ -878,18 +873,17 @@ void plot()
   u3csection13->Draw("P");
 
   //plot the fitted function and each contribution
-  TF1 *fitups3cs13 = new TF1("ups3 cs fit", "[15]*sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups3cs13->SetParameter(0, datasigma[9][counter]/(param[35]+mass[4]));
+  TF1 *fitups3cs13 = new TF1("ups3 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
+  fitups3cs13->SetParameter(0, datasigma[9][counter]/(mass[4]));
   fitups3cs13->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups3cs13->SetParameter(i, param[i+7]);
   fitups3cs13->SetParameter(7, param[4]);
-  fitups3cs13->SetParameter(8, param[35]+mass[4]);
+  fitups3cs13->SetParameter(8, mass[4]);
   for(int i=9; i<13; i++)
     fitups3cs13->SetParameter(i, param[i+5]);
-  fitups3cs13->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups3cs13->SetParameter(14, param[34]+mass[0]);
-  fitups3cs13->SetParameter(15, param[32]);
+  fitups3cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups3cs13->SetParameter(14, mass[0]);
   fitups3cs13->SetLineColor(kBlue);
   fitups3cs13->Draw("lsame");
   
@@ -915,9 +909,9 @@ void plot()
   float dataups2ccs13[5][nups2ccs13];
   for(int i=0; i<nups2ccs13; i++)
     {
-      dataups2ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17], 5);
-      dataups2ccs13[1][i]=datasigma[1][i+counter]*param[33]*param[26];
-      dataups2ccs13[2][i]=datasigma[2][i+counter]*param[33]*param[26];
+      dataups2ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
+      dataups2ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[26];
+      dataups2ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[26];
       dataups2ccs13[3][i]=dataups2ccs13[0][i]-datasigma[5][i+counter];
       dataups2ccs13[4][i]=datasigma[6][i+counter]-dataups2ccs13[0][i];
     }
@@ -940,18 +934,17 @@ void plot()
   u2csection13->Draw("P");
 
   //plot the fitted function and each contribution
-  TF1 *fitups2cs13 = new TF1("ups2 cs fit", "[15]*sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups2cs13->SetParameter(0, datasigma[9][counter]/(param[35]+mass[5]));
+  TF1 *fitups2cs13 = new TF1("ups2 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
+  fitups2cs13->SetParameter(0, datasigma[9][counter]/(mass[5]));
   fitups2cs13->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups2cs13->SetParameter(i, param[i+7]);
   fitups2cs13->SetParameter(7, param[5]);
-  fitups2cs13->SetParameter(8, param[35]+mass[5]);
+  fitups2cs13->SetParameter(8, mass[5]);
   for(int i=9; i<13; i++)
     fitups2cs13->SetParameter(i, param[i+5]);
-  fitups2cs13->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups2cs13->SetParameter(14, param[34]+mass[0]);
-  fitups2cs13->SetParameter(15, param[32]);
+  fitups2cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups2cs13->SetParameter(14, mass[0]);
   fitups2cs13->SetLineColor(kBlue);
   fitups2cs13->Draw("lsame");
 
@@ -977,9 +970,9 @@ void plot()
   float dataups1ccs13[5][nups1ccs13];
   for(int i=0; i<nups1ccs13; i++)
     {
-      dataups1ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(param[35]+mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17], 6);
-      dataups1ccs13[1][i]=datasigma[1][i+counter]*param[33]*param[27];
-      dataups1ccs13[2][i]=datasigma[2][i+counter]*param[33]*param[27];
+      dataups1ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
+      dataups1ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[27];
+      dataups1ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[27];
       dataups1ccs13[3][i]=dataups1ccs13[0][i]-datasigma[5][i+counter];
       dataups1ccs13[4][i]=datasigma[6][i+counter]-dataups1ccs13[0][i];
     }
@@ -1002,18 +995,17 @@ void plot()
   u1csection13->Draw("P");
   
   //plot the fitted function and each contribution
-  TF1 *fitups1cs13 = new TF1("ups1 cs fit", "[15]*sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups1cs13->SetParameter(0, datasigma[9][counter]/(param[35]+mass[6]));
+  TF1 *fitups1cs13 = new TF1("ups1 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
+  fitups1cs13->SetParameter(0, datasigma[9][counter]/(mass[6]));
   fitups1cs13->SetParameter(1, datasigma[8][counter]/2);
   for(int i=2; i<7; i++)
     fitups1cs13->SetParameter(i, param[i+7]);
   fitups1cs13->SetParameter(7, param[8]);
-  fitups1cs13->SetParameter(8, param[35]+mass[6]);
+  fitups1cs13->SetParameter(8, mass[6]);
   for(int i=9; i<13; i++)
     fitups1cs13->SetParameter(i, param[i+5]);
-  fitups1cs13->SetParameter(13, datasigma[9][0]/(param[34]+mass[0]));
-  fitups1cs13->SetParameter(14, param[34]+mass[0]);
-  fitups1cs13->SetParameter(15, param[32]);
+  fitups1cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
+  fitups1cs13->SetParameter(14, mass[0]);
   fitups1cs13->SetLineColor(kBlue);
   fitups1cs13->Draw("lsame");
 
@@ -1036,7 +1028,7 @@ void plot()
   //part: plotting the "pulls" - maintaining the uncertainty, though
   double cs, y, pt, dpt, dy, npt;
   int nmin = 3, ny=4, nsteps;
-  double dn = (8.-3.)/39., signc = sigplot(datasigma[9][0]/(param[34]+mass[0]), 4, 0, param[9], param[10], param[11], param[12], param[13], 1., param[34]+mass[0], param[14], param[15], param[16], param[17]);
+  double dn = (8.-3.)/39., signc = sigplot(datasigma[9][0]/(mass[0]), 4, 0, param[9], param[10], param[11], param[12], param[13], 1., mass[0], param[14], param[15], param[16], param[17]);
   
   //7 TeV psiprime data
   // CMS psiprime
@@ -1054,7 +1046,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[34]+mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1079,7 +1071,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[34]+mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1148,7 +1140,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[34]+mass[1]), pt, y, param[9], param[10], param[11], param[12], param[13], param[1], param[34]+mass[1], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[1]), pt, y, param[9], param[10], param[11], param[12], param[13], param[1], mass[1], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1206,7 +1198,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[34]+mass[2]), pt, y, param[9], param[10], param[11], param[12], param[13], param[2], param[34]+mass[2], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[2]), pt, y, param[9], param[10], param[11], param[12], param[13], param[2], mass[2], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1264,7 +1256,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[34]+mass[3]), pt, y, param[9], param[10], param[11], param[12], param[13], param[3], param[34]+mass[3], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[3]), pt, y, param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1323,7 +1315,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1348,7 +1340,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1425,7 +1417,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1450,7 +1442,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1527,7 +1519,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1552,7 +1544,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=sigplot(datasigma[9][i+counter]/(param[35]+mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1628,7 +1620,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=param[31]*sigplot(datasigma[9][i+counter]/(param[34]+mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], param[34]+mass[0], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[0]), pt, y, param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1686,7 +1678,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=param[31]*sigplot(datasigma[9][i+counter]/(param[34]+mass[3]), pt, y, param[9], param[10], param[11], param[12], param[13], param[3], param[34]+mass[3], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[3]), pt, y, param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1745,7 +1737,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=param[32]*sigplot(datasigma[9][i+counter]/(param[35]+mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], param[35]+mass[4], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[4]), pt, y, param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1809,7 +1801,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=param[32]*sigplot(datasigma[9][i+counter]/(param[35]+mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], param[35]+mass[5], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[5]), pt, y, param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;
@@ -1873,7 +1865,7 @@ void plot()
 	  for(int xy = 0; xy < ny; xy++)
 	    {
 	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
-	      cs+=param[32]*sigplot(datasigma[9][i+counter]/(param[35]+mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], param[35]+mass[6], param[14], param[15], param[16], param[17]);
+	      cs+=sigplot(datasigma[9][i+counter]/(mass[6]), pt, y, param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17]);
 	    }
 	}
       nsteps = npt*ny;

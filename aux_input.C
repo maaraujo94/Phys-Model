@@ -63,7 +63,7 @@ void input(vector <vector <double> > &datasigma, int *ns)
   float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
   int stateid = 0;
   
-  //read cross section measurements to a vector of form pt/M / cross section*MQuarkonium (nb/GeV) / uncertainty / data ID / K factor / pT/M bin bottom / pT/M bin top / y bin bottom / y bin top / sqrt(s)/M
+  //read cross section measurements to a vector of form pt/M / cross section*MQuarkonium (nb/GeV) / uncertainty / data ID / K factor / pT/M bin bottom / pT/M bin top / y bin bottom / y bin top / sqrt(s)
   
   //psiprime CMS at 7 TeV
   ns[stateid] = readout(datasigma, "data/CMS_psip_csection.txt", mass[0], 7.9e-3*1000, stateid, 7000, 0);
@@ -84,14 +84,6 @@ void input(vector <vector <double> > &datasigma, int *ns)
 
   //jpsi CMS at 7 TeV
   ns[stateid] = readout(datasigma, "data/CMS_jpsi_csection.txt", mass[3], 5.961e-2*1000, stateid, 7000, 0);
-  stateid++; 
-
-  //chic2/chic1 ratio CMS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/CMS_chic_ratio.txt", mass[3], 19.2/33.9, stateid, 7000, 3);
-  stateid++; 
-
-  //chib2/chib1 ratio CMS
-  ns[stateid] = readout(datasigma, "data/CMS_chib_ratio.txt", mass[6], 1., stateid, 7000, 3);
   stateid++; 
 
   //ups(3S) CMS
@@ -139,4 +131,13 @@ void input(vector <vector <double> > &datasigma, int *ns)
   ns[stateid] = readout(datasigma, "data/CMS_ups1_csection_13.txt", mass[6], 2.48e-2*1000, stateid, 13000, 2);
   stateid++; 
 
+  //cross section ratios
+  //chic2/chic1 ratio CMS at 7 TeV
+  ns[stateid] = readout(datasigma, "data/CMS_chic_ratio.txt", mass[3], 19.2/33.9, stateid, 7000, 3);
+  stateid++; 
+  
+  //chib2/chib1 ratio CMS
+  ns[stateid] = readout(datasigma, "data/CMS_chib_ratio.txt", mass[6], 1., stateid, 7000, 3);
+  stateid++; 
+  
 }

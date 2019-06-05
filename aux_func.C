@@ -102,3 +102,108 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, doub
       }
   return uint/lint;
 }
+
+// general function for any state
+// mqq can be defined as the user prefers: M(state) or fixed Mc, Mb
+double statecont(vector <vector <double> > &datasigma, double *pars, double scale, double ptmmin,
+		 double mqq, double Lstate, double lumi, double br,
+		 int pos_i, int length)
+{
+  double m_psip = 3.686, dpt, dy, ratio, factor = 0, cs;
+  int nmin = 3, nmax = 8, ny = 4, npt, nsteps;
+  double dn = (double)(nmax-nmin) / 39.;
+
+  pars[0] = datasigma[9][pos_i]/mqq;
+  pars[9] = mqq;
+  pars[8] = Lstate;
+
+  for(int i = pos_i; i < pos_i+length; i++)
+    if(datasigma[0][i] >= ptmmin) {
+
+      dpt = datasigma[6][i]-datasigma[5][i];
+      dy = datasigma[8][i]-datasigma[7][i];
+      npt = nmin + int(0.5 + dn*(dpt*m_psip-1.));
+      nsteps = npt*ny;
+
+      cs = 0.;
+      for(int xpt = 0; xpt < npt; xpt++)
+	{
+	  pars[1] = datasigma[5][i]+xpt*dpt/(npt-1.)+1e-10;
+	  for(int xy = 0; xy < ny; xy++)
+	    {
+	      pars[2] = datasigma[7][i]+xy*dy/(ny-1.);
+	      cs+=sig(pars);
+	    }
+	}
+      cs/=(scale*nsteps);
+
+      //lambda=0.;
+      //ratio=(1+1./3*datasigma[4][i])/(1+(1-lambda)/(3+lambda)*datasigma[4][i]);
+      ratio = 1.;
+
+      factor-=0.5*((cs-datasigma[1][i]*ratio*lumi*br)/(datasigma[2][i]*ratio*lumi*br))*((cs-datasigma[1][i]*ratio*lumi*br)/(datasigma[2][i]*ratio*lumi*br)); 
+    }
+  return factor;
+}
+
+// general function for ratios
+// mcb can be defined as the user prefers: M(state) or fixed Mc, Mb
+double ratiocont(vector <vector <double> > &datasigma, double *pars, double scale, double ptmmin,
+		 double mqq, double Lstate1, double Lstate2, double br,
+		 int pos_i, int length)
+{
+  double m_psip = 3.686, dpt, dy, ratio, factor = 0, cs1, cs2;
+  int nmin = 3, nmax = 8, ny = 4, npt, nsteps;
+  double dn = (double)(nmax-nmin) / 39.;
+
+  pars[0] = datasigma[9][pos_i]/mqq;
+  pars[9] = mqq;
+
+  for(int i = pos_i; i < pos_i+length; i++) {
+
+    dpt = datasigma[6][i]-datasigma[5][i];
+    dy = datasigma[8][i]-datasigma[7][i];
+    npt = nmin + int(0.5 + dn*(dpt*m_psip-1.));
+    nsteps = npt*ny;
+    
+    cs1 = 0.;
+    cs2 = 0.;
+    for(int xpt = 0; xpt < npt; xpt++)
+      {
+	pars[1] = datasigma[5][i]+xpt*dpt/(npt-1.)+1e-10;
+	for(int xy = 0; xy < ny; xy++)
+	  {
+	    pars[2] = datasigma[7][i]+xy*dy/(ny-1.);
+	    pars[8] = Lstate1;
+	    cs1+=sig(pars);
+	    pars[8] = Lstate2;
+	    cs2+=sig(pars);
+	  }
+      }
+    cs1/=(scale*nsteps);
+    cs2/=(scale*nsteps);
+    
+    //lambda1=0.;
+    //lambda2=0.;
+    //ratio=(1+(1-lambda1)/(3+lambda1)*datasigma[4][i])/(1+(1-lambda2)/(3+lambda2)*datasigma[4][i]);
+    
+    ratio = 1.;
+    
+    factor-=0.5*((cs1/cs2-datasigma[1][i]*ratio*br)/(datasigma[2][i]*ratio*br))*((cs1/cs2-datasigma[1][i]*ratio*br)/(datasigma[2][i]*ratio*br));
+  }
+  return factor;
+}
+
+double lest(vector <vector <double> > &datasigma, float PTMNORM, int init_i, int len_i)
+{
+  double min_dpt = 100;
+  int min_i = 0;
+  
+  for(int i = init_i; i < init_i + len_i; i++)
+    if(abs(datasigma[0][i] - PTMNORM) < min_dpt) {
+      min_i = i;
+      min_dpt = abs(datasigma[0][i] - PTMNORM);
+    }
+  
+  return datasigma[1][min_i];
+}
