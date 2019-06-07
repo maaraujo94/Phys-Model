@@ -2,7 +2,6 @@
 //auxiliary file that defines the dataset input function
 /////////////////////////////////////////////////////////////////////////////
 
-
 #include <fstream>
 using namespace std;
 

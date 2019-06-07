@@ -53,12 +53,11 @@
 ./main_plot_C.so: /home/mariana/root/include/TPoint.h
 ./main_plot_C.so: /home/mariana/root/include/TAttCanvas.h
 ./main_plot_C.so: /home/mariana/root/include/TCanvasImp.h
-./main_plot_C.so: /home/mariana/root/include/TGraphErrors.h
+./main_plot_C.so: /home/mariana/root/include/TGraphAsymmErrors.h
 ./main_plot_C.so: /home/mariana/root/include/TGraph.h
 ./main_plot_C.so: /home/mariana/root/include/TVectorFfwd.h
 ./main_plot_C.so: /home/mariana/root/include/TVectorDfwd.h
 ./main_plot_C.so: /home/mariana/root/include/TFitResultPtr.h
-./main_plot_C.so: /home/mariana/root/include/TGraphAsymmErrors.h
 ./main_plot_C.so: /home/mariana/root/include/TH1F.h
 ./main_plot_C.so: /home/mariana/root/include/TH1.h
 ./main_plot_C.so: /home/mariana/root/include/TAxis.h
@@ -108,7 +107,6 @@
 ./main_plot_C.so: /home/mariana/root/include/TF1AbsComposition.h
 ./main_plot_C.so: /home/mariana/root/include/TMath.h
 ./main_plot_C.so: /home/mariana/root/include/Math/ParamFunctor.h
-./main_plot_C.so: /home/mariana/root/include/TF2.h
 ./main_plot_C.so: /home/mariana/root/include/TLegend.h
 ./main_plot_C.so: /home/mariana/root/include/TPave.h
 ./main_plot_C.so: /home/mariana/root/include/TBox.h

@@ -1,9 +1,7 @@
 #include "TCanvas.h"
-#include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1F.h"
 #include "TF1.h"
-#include "TF2.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
 #include "TAxis.h"
@@ -19,7 +17,7 @@ using namespace std;
 
 vector <vector <double> > datasigma(10);
 //psi', chi_c2, chi_c1, jpsi, ups(3S), ups(2S), ups(1S)
-float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
+float mass[7] = {3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
 
 void plot()
 {
@@ -27,38 +25,34 @@ void plot()
   
   ifstream file;
   ofstream tex;
-  int ns[18]={0};
-  double param[32], eparam[32], ptmmin = 0;
-  int counter = 0, ndf;
-  
-  int pos_psip=0, pos_chic2=0, pos_chic1=0, pos_jpsi=0, pos_ups3=0, pos_ups2=0, pos_ups1=0;
-  double pt_psip=100, pt_chic2=100, pt_chic1=100, pt_jpsi=100, pt_ups3=100, pt_ups2=100, pt_ups1=100;
-  double minimum, chinorm, chiprob, cs_psip, cs_chic2, cs_chic1, cs_jpsi, cs_ups3, cs_ups2, cs_chib2, cs_chib1, cs_ups1, lambda_chic2, lambda_chic1, lambda_jpsi, lambda_ups3, lambda_ups2, lambda_chib2, lambda_chib1, lambda_ups1, ratio, aux;
-
-  double dataout[67];
+  const int nstates = 18;
+  int ns[nstates] = {0}, counter = 0, ndf;
+  const int nparam = 32;
+  double param[nparam], eparam[nparam], ptmmin = 0, minimum, chiprob;
 
   //////////////////////////////////
   //part: getting data from files
   /////////////////////////////////
 
   input(datasigma, ns);
-  
-  //part: reading fit results
 
+  /////////////////////////////
+  //part: reading fit results
+  /////////////////////////////
+  
   file.open("fit.txt");
-  for(int i=0; i<67; i++)
-    file >> dataout[i];
-  for(int i=0; i<32; i++)
-    param[i] = dataout[i];
-  for(int i=0; i<32; i++)
-    eparam[i] = dataout[i+32];
-  ptmmin = dataout[64];
-  minimum = dataout[65];
-  ndf = dataout[66];
+  for(int i = 0; i < nparam; i++)
+    file >> param[i];
+  for(int i = 0; i < nparam; i++)
+    file >> eparam[i];
+  file >> ptmmin;
+  file >> minimum;
+  file >> ndf;
   chiprob = TMath::Prob(minimum, ndf);
 
-  char names[32][100] = {"L_{\\psi(2S)}","L_{\\chi_{c2}}","L_{\\chi_{c1}}","L_{J/\\psi}","L_{\\Upsilon(3S)}","L_{\\Upsilon(2S)}","L_{\\chi_{b2}}","L_{\\chi_{b1}}","L_{\\Upsilon(1S)}","A","\\beta","\\tau","\\rho","\\delta","b","c","d","e","BR_{ppdm}","BR_{ppjdp}","BR_{c2jpsi}","BR_{c1jpsi}","BR_{jpsidm}","BR_{b2ups1}","BR_{b1ups1}","BR_{ups3dm}","BR_{ups2dm}","BR_{ups1dm}","L_{CMS}","L_{ATLAS}","L_{ATLAS}(\\Upsilon)","L_{CMS}(13)"};
-  
+  char names[nparam][100] = {"L_{\\psi(2S)}","L_{\\chi_{c2}}","L_{\\chi_{c1}}","L_{J/\\psi}","L_{\\Upsilon(3S)}","L_{\\Upsilon(2S)}","L_{\\chi_{b2}}","L_{\\chi_{b1}}","L_{\\Upsilon(1S)}","A","\\beta","\\tau","\\rho","\\delta","b","c","d","e","BR_{ppdm}","BR_{ppjdp}","BR_{c2jpsi}","BR_{c1jpsi}","BR_{jpsidm}","BR_{b2ups1}","BR_{b1ups1}","BR_{ups3dm}","BR_{ups2dm}","BR_{ups1dm}","L_{CMS}","L_{ATLAS}","L_{ATLAS}(\\Upsilon)","L_{CMS}(13)"};
+
+  //writing the fit parameters to a pretty tex file
   tex.open("plots/fitp.tex");
 
   tex << "\\begin{table}" << endl;
@@ -66,10 +60,10 @@ void plot()
   tex << "\\begin{tabular}{c|c|c}" << endl;
   tex << "Parameter & Value & Uncertainty \\\\" << endl;
   tex << "\\hline" << endl;
-  for(int i=0; i<32; i++)
+  for(int i = 0; i < nparam; i++)
     {
       tex << "$" << names[i] << "$ & " << param[i] << " & ";
-      if(eparam[i]==0) tex << "fixed \\\\" << endl;
+      if(eparam[i] == 0) tex << "fixed \\\\" << endl;
       else tex << eparam[i] << " \\\\" << endl;
     }
   tex << "min $p_T/M$ & " << ptmmin << " & fixed \\\\" << endl;
@@ -77,956 +71,216 @@ void plot()
   tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << minimum << " / " << ndf << " = " << minimum/ndf << ")}" << endl;
   tex << "\\end{table}" << endl;
   tex.close();
-  
+
+  /////////////////////////
   //part: plotting data
-  float xi = -2, xf = 49.9, yi = 1.01e-5, yf = 9.99e2;
+  /////////////////////////
   
-  //plot of psiprime results
-  //cross section plot
-  //CMS data
-  const int npsipccs=ns[0];
-  float datapsipccs[5][npsipccs];
-  for(int i=0; i<npsipccs; i++)
-    {
-      datapsipccs[0][i]=avgptm(datasigma[5][i], datasigma[6][i], datasigma[7][i], datasigma[8][i], datasigma[9][i]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
-      datapsipccs[1][i]=datasigma[1][i]*param[28]*param[18];
-      datapsipccs[2][i]=datasigma[2][i]*param[28]*param[18];
-      datapsipccs[3][i]=datapsipccs[0][i]-datasigma[5][i];
-      datapsipccs[4][i]=datasigma[6][i]-datapsipccs[0][i];
-    }
+  //float xi = -2, xf = 49.9, yi = 1.01e-5, yf = 9.99e2;
 
-  counter+=npsipccs;
-  //ATLAS data
-  const int npsipacs=ns[1];
-  float datapsipacs[5][npsipacs];
-  for(int i=0; i<npsipacs; i++)
-    {
-      datapsipacs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
-      datapsipacs[1][i]=datasigma[1][i+counter]*param[29]*param[19]*param[22];
-      datapsipacs[2][i]=datasigma[2][i+counter]*param[29]*param[19]*param[22];
-      datapsipacs[3][i]=datapsipacs[0][i]-datasigma[5][i+counter];
-      datapsipacs[4][i]=datasigma[6][i+counter]-datapsipacs[0][i];
-    }
+  //auxiliary functions storing plotting variables for all 14 plots
+  //psi', chic2, chic1, jpsi, ups3, ups2, ups1, psi'13, jpsi13, ups313, ups213, ups113, chicr(state->Lpos2), chibr(state->Lpos2)
+  const int nplots = 14;
+  int ndata[nplots] = {2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1};
+  int Lpos[nplots] = {0, 1, 2, 3, 4, 5, 8, 0, 3, 4, 5, 8, 1, 6};
+  int state[nplots] = {0, 1, 2, 3, 4, 5, 6, 0, 3, 4, 5, 6, 2, 7};
+  double mqq[nplots];
+  string savename[nplots] = {"psiprime", "chic2", "chic1", "jpsi", "ups3S", "ups2S", "ups1S", "psiprime_13", "jpsi_13", "ups3S_13", "ups2S_13", "ups1S_13", "chicr", "chibr"};
+  for(int i = 0; i < nplots; i++) {
+    mqq[i] = mass[state[i]];
+    savename[i] = "plots/"+savename[i]+"_cs.pdf";
+  }
+  mqq[nplots-2] = mass[3];
+  mqq[nplots-1] = mass[6];
 
-  TCanvas *psipcs = new TCanvas("psip cross section", "psip cross section", 700, 700);
-  psipcs->SetLogy();
+  //testc - nr of datapoints, xplot - plot number, ctr - dataset number
+  int testc = 0, xplot = 0, ctr = 0;
+  double lumibr[2];
+  string legtitles[2];
+  int mkrStyle[2], len[2];
   
-  TH1F *fpsipcs = psipcs->DrawFrame(xi, yi, xf, yf);
-  fpsipcs->SetXTitle("p_{T}/M");
-  fpsipcs->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  fpsipcs->GetYaxis()->SetTitleOffset(1);
-  psipcs->Modified();
-  psipcs->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *pcsection = new TGraphAsymmErrors(npsipccs, datapsipccs[0], datapsipccs[1], datapsipccs[3], datapsipccs[4], datapsipccs[2], datapsipccs[2]);
-  pcsection->SetMarkerStyle(20);
-  pcsection->SetLineColor(kBlack);
-  pcsection->SetMarkerColor(kBlack);
-  pcsection->SetMarkerSize(.75);
-  pcsection->Draw("P");
-
-  //plot ATLAS data
-  TGraphAsymmErrors *pasection = new TGraphAsymmErrors(npsipacs, datapsipacs[0], datapsipacs[1], datapsipacs[3], datapsipacs[4], datapsipacs[2], datapsipacs[2]);
-  pasection->SetMarkerStyle(25);
-  pasection->SetMarkerColor(kBlack);
-  pasection->SetLineColor(kBlack);
-  pasection->SetMarkerSize(.75);
-  pasection->Draw("P");
-
-  //plot the fitted function and each contribution
-  TF1 *fitpsipcs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitpsipcs->SetParameter(0, datasigma[9][0]/(mass[0]));
-  fitpsipcs->SetParameter(1, datasigma[8][0]/2);
-  for(int i=2; i<7; i++)
-    fitpsipcs->SetParameter(i, param[i+7]);
-  fitpsipcs->SetParameter(7, param[0]);
-  fitpsipcs->SetParameter(8, mass[0]);
-  for(int i=9; i<13; i++)
-    fitpsipcs->SetParameter(i, param[i+5]);
-  fitpsipcs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitpsipcs->SetParameter(14, mass[0]);
-  fitpsipcs->SetLineColor(kBlue);
-  fitpsipcs->Draw("lsame");
+  //psiprime 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[18];
+  lumibr[1] = param[29]*param[19]*param[22];
+  legtitles[0] = "CMS #psi(2S)";
+  legtitles[1] = "ATLAS #psi(2S)";
+  mkrStyle[0] = 20;
+  mkrStyle[1] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
   
-  //text on the plot
-  TLatex lpsipcs;
-  lpsipcs.SetTextSize(0.03);
-  lpsipcs.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lpsipcs.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lpsipcs.DrawLatex(0, 2.e-5, "pp 7 TeV");
+  //chic2 7 TeV
+  //customizable options
+  lumibr[0] = param[29]*param[20]*param[22];
+  legtitles[0] = "ATLAS #chi_{c2}";
+  mkrStyle[0] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //draw legend
-  TLegend *legpsipcs = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legpsipcs->SetTextSize(0.03);
-  legpsipcs->AddEntry(pcsection, "CMS #psi(2S)", "p");
-  legpsipcs->AddEntry(pasection, "ATLAS #psi(2S)", "p");
-  legpsipcs->AddEntry(fitpsipcs, "model", "l");
-  legpsipcs->Draw();
-  //save psiprime cross section plot
-  psipcs->SaveAs("plots/psiprime_cs.pdf");
-   
-  //plot of chic2 results
-  //cross section plot
-  //ATLAS data
-  counter+=npsipacs;
-  const int nchic2cs=ns[2];
-  float datachic2cs[5][nchic2cs];  
-  for(int i=0; i<nchic2cs; i++)
-    {
-      datachic2cs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[1]), param[9], param[10], param[11], param[12], param[13], param[1], mass[1], param[14], param[15], param[16], param[17], 1);
-      datachic2cs[1][i]=datasigma[1][i+counter]*param[29]*param[20]*param[22];
-      datachic2cs[2][i]=datasigma[2][i+counter]*param[29]*param[20]*param[22];
-      datachic2cs[3][i]=datachic2cs[0][i]-datasigma[5][i+counter];
-      datachic2cs[4][i]=datasigma[6][i+counter]-datachic2cs[0][i];
-    }
-
-  TCanvas *chic2cs = new TCanvas("chic2 cross section", "chic2 cross section", 700, 700);
-  chic2cs->SetLogy();
-  TH1F *fchic2cs = chic2cs->DrawFrame(xi, yi, xf, yf); 
-  fchic2cs->SetXTitle("p_{T}/M");
-  fchic2cs->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  chic2cs->Modified();
-  chic2cs->SetTitle("");
-
-  //plot data
-  TGraphAsymmErrors *c2section = new TGraphAsymmErrors(nchic2cs, datachic2cs[0], datachic2cs[1], datachic2cs[3], datachic2cs[4], datachic2cs[2], datachic2cs[2]);
-  c2section->SetMarkerStyle(20);
-  c2section->SetLineColor(kBlack);
-  c2section->SetMarkerColor(kBlack);
-  c2section->SetMarkerSize(.75);
-  c2section->Draw("P");
+  //chic1 7 TeV
+  //customizable options
+  lumibr[0] = param[21]*param[22];
+  legtitles[0] = "ATLAS #chi_{c1}";
+  mkrStyle[0] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
   
-  //plot the fitted function and the direct contributions
-  TF1 *fitchic2cs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitchic2cs->SetParameter(0, datasigma[9][counter]/(mass[1]));
-  fitchic2cs->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitchic2cs->SetParameter(i, param[i+7]);
-  fitchic2cs->SetParameter(7, param[1]);
-  fitchic2cs->SetParameter(8, mass[1]);
-  for(int i=9; i<13; i++)
-    fitchic2cs->SetParameter(i, param[i+5]);
-  fitchic2cs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitchic2cs->SetParameter(14, mass[0]);
-  fitchic2cs->SetLineColor(kBlue);
-  fitchic2cs->Draw("lsame");
- 
-  //text on the plot
-  TLatex lchic2cs;
-  lchic2cs.SetTextSize(0.03);
-  lchic2cs.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lchic2cs.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lchic2cs.DrawLatex(0, 2.e-5, "pp 7 TeV");
-  
-  //draw legend
-  TLegend *legchic2cs = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legchic2cs->SetTextSize(0.03);
-  legchic2cs->AddEntry(c2section, "ATLAS #chi_{c2}", "p");
-  legchic2cs->AddEntry(fitchic2cs, "model", "l");
-  legchic2cs->Draw();
-  //save chic2 cross section plot 
-  chic2cs->SaveAs("plots/chic2_cs.pdf");
-  
-  //plot of chic1 results
-  //cross section plot
-  //ATLAS data
-  counter+=nchic2cs;
-  const int nchic1cs=ns[3];
-  float datachic1cs[5][nchic1cs];  
-  for(int i=0; i<nchic1cs; i++)
-    {
-      datachic1cs[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[2]), param[9], param[10], param[11], param[12], param[13], param[2], mass[2], param[14], param[15], param[16], param[17], 2);
-      datachic1cs[1][i]=datasigma[1][i+counter]*param[29]*param[21]*param[22];
-      datachic1cs[2][i]=datasigma[2][i+counter]*param[29]*param[21]*param[22];
-      datachic1cs[3][i]=datachic1cs[0][i]-datasigma[5][i+counter];
-      datachic1cs[4][i]=datasigma[6][i+counter]-datachic1cs[0][i];
-    }
-  
-  TCanvas *chic1cs = new TCanvas("chic1 cross section", "chic1 cross section", 700, 700);
-  chic1cs->SetLogy();
-  TH1F *fchic1cs = chic1cs->DrawFrame(xi, yi, xf, yf);
-  fchic1cs->SetXTitle("p_{T}/M");
-  fchic1cs->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  chic1cs->Modified();
-  chic1cs->SetTitle("");
+  //jpsi 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[22];
+  legtitles[0] = "CMS J/#psi";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //plot data
-  TGraphAsymmErrors *c1section = new TGraphAsymmErrors(nchic1cs, datachic1cs[0], datachic1cs[1], datachic1cs[3], datachic1cs[4], datachic1cs[2], datachic1cs[2]);
-  c1section->SetMarkerStyle(20);
-  c1section->SetLineColor(kBlack);
-  c1section->SetMarkerColor(kBlack);
-  c1section->SetMarkerSize(.75);
-  c1section->Draw("P");
-  
-  //plot the fitted function and the direct contributions
-  TF1 *fitchic1cs = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitchic1cs->SetParameter(0, datasigma[9][counter]/(mass[2]));
-  fitchic1cs->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitchic1cs->SetParameter(i, param[i+7]);
-  fitchic1cs->SetParameter(7, param[2]);
-  fitchic1cs->SetParameter(8, mass[2]);
-  for(int i=9; i<13; i++)
-    fitchic1cs->SetParameter(i, param[i+5]);
-  fitchic1cs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitchic1cs->SetParameter(14, mass[0]);
-  fitchic1cs->SetLineColor(kBlue);
-  fitchic1cs->Draw("lsame");
+  //ups(3S) 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[25];
+  lumibr[1] = param[25]*param[30];
+  legtitles[0] = "CMS #Upsilon(3S)";
+  legtitles[1] = "ATLAS #Upsilon(3S)";
+  mkrStyle[0] = 20;
+  mkrStyle[1] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //text on the plot
-  TLatex lchic1cs;
-  lchic1cs.SetTextSize(0.03);
-  lchic1cs.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lchic1cs.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lchic1cs.DrawLatex(0, 2.e-5, "pp 7 TeV");
+  //ups(2S) 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[26];
+  lumibr[1] = param[26]*param[30];
+  legtitles[0] = "CMS #Upsilon(2S)";
+  legtitles[1] = "ATLAS #Upsilon(2S)";
+  mkrStyle[0] = 20;
+  mkrStyle[1] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //draw legend
-  TLegend *legchic1cs = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legchic1cs->SetTextSize(0.03);
-  legchic1cs->AddEntry(c1section, "ATLAS #chi_{c1}", "p");
-  legchic1cs->AddEntry(fitchic1cs, "model", "l");
-  legchic1cs->Draw();
-  //save chic1 cross section plot
-  chic1cs->SaveAs("plots/chic1_cs.pdf");
-  
-  //plot of j/psi results
-  //cross section plot
-  //CMS data
-  counter+=nchic1cs;
-  const int njpsics=ns[4];
-  float datajpsics[5][njpsics];
-  for(int i=0; i<njpsics; i++)
-    {
-      datajpsics[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17], 3);
-      datajpsics[1][i]=datasigma[1][i+counter]*param[28]*param[22];
-      datajpsics[2][i]=datasigma[2][i+counter]*param[28]*param[22];
-      datajpsics[3][i]=datajpsics[0][i]-datasigma[5][i+counter];
-      datajpsics[4][i]=datasigma[6][i+counter]-datajpsics[0][i];
-    }
-  
-  TCanvas *jpsics = new TCanvas("jpsi cross section", "jpsi cross section", 700, 700);
-  jpsics->SetLogy();
-  TH1F *fjpsics = jpsics->DrawFrame(xi, yi, xf, yf);
-  fjpsics->SetXTitle("p_{T}/M");
-  fjpsics->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  jpsics->Modified();
-  jpsics->SetTitle("");
-  
-  //plot data
-  TGraphAsymmErrors *jsection = new TGraphAsymmErrors(njpsics, datajpsics[0], datajpsics[1], datajpsics[3], datajpsics[4], datajpsics[2], datajpsics[2]);
-  jsection->SetMarkerStyle(20);
-  jsection->SetLineColor(kBlack);
-  jsection->SetMarkerColor(kBlack);
-  jsection->SetMarkerSize(.75);
-  jsection->Draw("P");
+  //ups(1S) 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[27];
+  lumibr[1] = param[27]*param[30];
+  legtitles[0] = "CMS #Upsilon(1S)";
+  legtitles[1] = "ATLAS #Upsilon(1S)";
+  mkrStyle[0] = 20;
+  mkrStyle[1] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //plot the fitted function
-  TF1 *fitjpsics = new TF1("jpsi cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitjpsics->SetParameter(0, datasigma[9][counter]/(mass[3]));
-  fitjpsics->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitjpsics->SetParameter(i, param[i+7]);
-  fitjpsics->SetParameter(7, param[3]);
-  fitjpsics->SetParameter(8, mass[3]);
-  for(int i=9; i<13; i++)
-    fitjpsics->SetParameter(i, param[i+5]);
-  fitjpsics->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitjpsics->SetParameter(14, mass[0]);
-  fitjpsics->SetLineColor(kBlue);
-  fitjpsics->Draw("lsame");
-  
-  //text on the plot
-  TLatex ljpsics;
-  ljpsics.SetTextSize(0.03);
-  ljpsics.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  ljpsics.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  ljpsics.DrawLatex(0, 2.e-5, "pp 7 TeV");
+  //psiprime 13 TeV
+  //customizable options
+  lumibr[0] = param[31]*param[18];
+  legtitles[0] = "CMS #psi(2S)";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //draw legend
-  TLegend *legjpsics = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legjpsics->SetTextSize(0.03);
-  legjpsics->AddEntry(jsection, "CMS J/#psi", "p");
-  legjpsics->AddEntry(fitjpsics, "model", "l");
-  legjpsics->Draw();
-  //save jpsi cross section plot
-  jpsics->SaveAs("plots/jpsi_cs.pdf");
+  //jpsi 13 TeV
+  //customizable options
+  lumibr[0] = param[31]*param[22];
+  legtitles[0] = "CMS J/#psi";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //plot of chic2/chic1 ratio
-  counter+=njpsics;
-  const int nchicr=ns[5];
-  float datachicr[5][nchicr];  
-  for(int i=0; i<nchicr; i++)
-    {
-      datachicr[0][i]=datasigma[0][i+counter];
-      datachicr[1][i]=datasigma[1][i+counter]*param[20]/param[21];
-      datachicr[2][i]=datasigma[2][i+counter]*param[20]/param[21];
-      datachicr[3][i]=datachicr[0][i]-datasigma[5][i+counter];
-      datachicr[4][i]=datasigma[6][i+counter]-datachicr[0][i];
-      }
+  //ups(3S) 13 TeV
+  //customizable options
+  lumibr[0] = param[31]*param[25];
+  legtitles[0] = "CMS #Upsilon(3S)";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  TCanvas *chicr = new TCanvas("chic2/chic1 cross section ratio", "chic2/chic1 cross section ratio", 700, 700);
-  TH1F *fchicr=chicr->DrawFrame(0.01, 0, 9, 1.39);
-  fchicr->SetXTitle("p_{T}/M");
-  fchicr->SetYTitle("ratio");
-  chicr->Modified();
-  chicr->SetTitle("");
+  //ups(2S) 13 TeV
+  //customizable options
+  lumibr[0] = param[31]*param[26];
+  legtitles[0] = "CMS #Upsilon(2S)";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //plot data
-  TGraphAsymmErrors *cratio = new TGraphAsymmErrors(nchicr, datachicr[0], datachicr[1], datachicr[3], datachicr[4], datachicr[2], datachicr[2]);
-  cratio->SetMarkerStyle(20);
-  cratio->SetLineColor(kBlack);
-  cratio->SetMarkerColor(kBlack);
-  cratio->SetMarkerSize(.75);
-  cratio->Draw("P");
+  //ups(1S) 13 TeV
+  //customizable options
+  lumibr[0] = param[31]*param[27];
+  legtitles[0] = "CMS #Upsilon(1S)";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //plot the fitted function
-  TF1 *fitchicr = new TF1("psip cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [13], [9], [10], [11], [12])/sigplot([0], x, [1], [2], [3], [4], [5], [6], [8], [13], [9], [10], [11], [12])", 0, 10);
-  fitchicr->SetParameter(0, datasigma[9][counter]/(mass[3]));
-  fitchicr->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitchicr->SetParameter(i, param[i+7]);
-  fitchicr->SetParameter(7, param[1]);
-  fitchicr->SetParameter(8, param[2]);
-  for(int i=9; i<13; i++)
-    fitchicr->SetParameter(i, param[i+5]);
-  fitchicr->SetParameter(13, mass[3]);
-  fitchicr->SetLineColor(kBlue);
-  fitchicr->Draw("lsame");
-  
-  //text on the plot
-  TLatex lchicr;
-  lchicr.SetTextSize(0.03);
-  lchicr.DrawLatex(0.5, 1.3, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lchicr.DrawLatex(0.5, 1.2, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lchicr.DrawLatex(0.25, 0.05, "pp 7 TeV");
+  //chic2 / chic1 ratio 7 TeV
+  //customizable options
+  lumibr[0] = param[20]/param[21];
+  legtitles[0] = "CMS #chi_{c2} / #chi_{c1}";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = rplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
 
-  //draw legend
-  TLegend *legchicr = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legchicr->SetTextSize(0.03);
-  legchicr->AddEntry(cratio, "CMS #chi_{c2} / #chi_{c1}", "p");
-  legchicr->AddEntry(fitchicr, "model", "l");
-  legchicr->Draw();
-  //save chic ratio plot
-  chicr->SaveAs("plots/chic_ratio.pdf");
-
-  //plot of chib2/chib1 ratio
-  counter+=nchicr;
-  const int nchibr=ns[6];
-  float datachibr[5][nchibr];  
-  for(int i=0; i<nchibr; i++)
-    {
-      datachibr[0][i]=datasigma[0][i+counter];
-      datachibr[1][i]=datasigma[1][i+counter]*param[23]/param[24];
-      datachibr[2][i]=datasigma[2][i+counter]*param[23]/param[24];
-      datachibr[3][i]=datachibr[0][i]-datasigma[5][i+counter];
-      datachibr[4][i]=datasigma[6][i+counter]-datachibr[0][i];
-      }
-
-  TCanvas *chibr = new TCanvas("chib2/chib1 cross section ratio", "chib2/chib1 cross section ratio", 700, 700);
-  TH1F *fchibr=chibr->DrawFrame(0.01, 0, 9, 1.39);
-  fchibr->SetXTitle("p_{T}/M");
-  fchibr->SetYTitle("ratio");
-  chibr->Modified();
-  chibr->SetTitle("");
-
-  //plot data
-  TGraphAsymmErrors *bratio = new TGraphAsymmErrors(nchibr, datachibr[0], datachibr[1], datachibr[3], datachibr[4], datachibr[2], datachibr[2]);
-  bratio->SetMarkerStyle(20);
-  bratio->SetLineColor(kBlack);
-  bratio->SetMarkerColor(kBlack);
-  bratio->SetMarkerSize(.75);
-  bratio->Draw("P");
-
-  //plot the fitted function
-  TF1 *fitchibr = new TF1("chib2/chib1 ratio fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [13], [9], [10], [11], [12])/sigplot([0], x, [1], [2], [3], [4], [5], [6], [8], [13], [9], [10], [11], [12])", 0, 10);
-  fitchibr->SetParameter(0, datasigma[9][counter]/(mass[6]));
-  fitchibr->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitchibr->SetParameter(i, param[i+7]);
-  fitchibr->SetParameter(7, param[6]);
-  fitchibr->SetParameter(8, param[7]);
-  for(int i=9; i<13; i++)
-    fitchibr->SetParameter(i, param[i+5]);
-  fitchibr->SetParameter(13, mass[6]);
-  fitchibr->SetLineColor(kBlue);
-  fitchibr->Draw("lsame");
-  
-  //text on the plot
-  TLatex lchibr;
-  lchibr.SetTextSize(0.03);
-  lchibr.DrawLatex(0.5, 1.3, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lchibr.DrawLatex(0.5, 1.2, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lchibr.DrawLatex(0.25, 0.05, "pp 7 TeV");
-
-  //draw legend
-  TLegend *legchibr = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legchibr->SetTextSize(0.03);
-  legchibr->AddEntry(bratio, "CMS #chi_{b2} / #chi_{b1}", "p");
-  legchibr->AddEntry(fitchibr, "model", "l");
-  legchibr->Draw();
-  //save chib ratio plot
-  chibr->SaveAs("plots/chib_ratio.pdf");
-
-  //CMS ups(3S)
-  const int nups3ccs=ns[7];
-  counter+=nchibr;
-  float dataups3ccs[5][nups3ccs];
-  for(int i=0; i<nups3ccs; i++)
-    {
-      dataups3ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
-      dataups3ccs[1][i]=datasigma[1][i+counter]*param[28]*param[25];
-      dataups3ccs[2][i]=datasigma[2][i+counter]*param[28]*param[25];
-      dataups3ccs[3][i]=dataups3ccs[0][i]-datasigma[5][i+counter];
-      dataups3ccs[4][i]=datasigma[6][i+counter]-dataups3ccs[0][i];
-    }
-  
-  counter+=nups3ccs;
-  //ATLAS ups(3S)
-  const int nups3acs=ns[8];
-  float dataups3acs[5][nups3acs];
-  for(int i=0; i<nups3acs; i++)
-    {
-      dataups3acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
-      dataups3acs[1][i]=datasigma[1][i+counter]*param[25]*param[30];
-      dataups3acs[2][i]=datasigma[2][i+counter]*param[25]*param[30];
-      dataups3acs[3][i]=dataups3acs[0][i]-datasigma[5][i+counter];
-      dataups3acs[4][i]=datasigma[6][i+counter]-dataups3acs[0][i];
-    }
-
-  TCanvas *ups3cs = new TCanvas("ups3 cross section", "ups3 cross section", 700, 700);
-  ups3cs->SetLogy();
-  
-  TH1F *fups3cs = ups3cs->DrawFrame(xi, yi, xf, yf);
-  fups3cs->SetXTitle("p_{T}/M");
-  fups3cs->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups3cs->Modified();
-  ups3cs->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u3csection = new TGraphAsymmErrors(nups3ccs, dataups3ccs[0], dataups3ccs[1], dataups3ccs[3], dataups3ccs[4], dataups3ccs[2], dataups3ccs[2]);
-  u3csection->SetMarkerStyle(20);
-  u3csection->SetLineColor(kBlack);
-  u3csection->SetMarkerColor(kBlack);
-  u3csection->SetMarkerSize(.75);
-  u3csection->Draw("P");
-
-  //plot ATLAS data
-  TGraphAsymmErrors *u3asection = new TGraphAsymmErrors(nups3acs, dataups3acs[0], dataups3acs[1], dataups3acs[3], dataups3acs[4], dataups3acs[2], dataups3acs[2]);
-  u3asection->SetMarkerStyle(25);
-  u3asection->SetMarkerColor(kBlack);
-  u3asection->SetLineColor(kBlack);
-  u3asection->SetMarkerSize(.75);
-  u3asection->Draw("P");
-  
-  //plot the fitted function and each contribution
-  TF1 *fitups3cs = new TF1("ups3 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups3cs->SetParameter(0, datasigma[9][counter]/(mass[4]));
-  fitups3cs->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups3cs->SetParameter(i, param[i+7]);
-  fitups3cs->SetParameter(7, param[4]);
-  fitups3cs->SetParameter(8, mass[4]);
-  for(int i=9; i<13; i++)
-    fitups3cs->SetParameter(i, param[i+5]);
-  fitups3cs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups3cs->SetParameter(14, mass[0]);
-  fitups3cs->SetLineColor(kBlue);
-  fitups3cs->Draw("lsame");
-  
-  //text on the plot
-  TLatex lups3cs;
-  lups3cs.SetTextSize(0.03);
-  lups3cs.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups3cs.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups3cs.DrawLatex(0, 2.e-5, "pp 7 TeV");
-
-  //draw legend
-  TLegend *legups3cs = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups3cs->SetTextSize(0.03);
-  legups3cs->AddEntry(u3csection, "CMS #Upsilon(3S)", "p");
-  legups3cs->AddEntry(u3asection, "ATLAS #Upsilon(3S)", "p");
-  legups3cs->AddEntry(fitups3cs, "model", "l");
-  legups3cs->Draw();
-  //save ups(3S) cross section plot
-  ups3cs->SaveAs("plots/ups3S_cs.pdf");
-
-  //CMS ups(2S)
-  const int nups2ccs=ns[9];
-  counter+=nups3acs;
-  float dataups2ccs[5][nups2ccs];
-  for(int i=0; i<nups2ccs; i++)
-    {
-      dataups2ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
-      dataups2ccs[1][i]=datasigma[1][i+counter]*param[28]*param[26];
-      dataups2ccs[2][i]=datasigma[2][i+counter]*param[28]*param[26];
-      dataups2ccs[3][i]=dataups2ccs[0][i]-datasigma[5][i+counter];
-      dataups2ccs[4][i]=datasigma[6][i+counter]-dataups2ccs[0][i];
-    }
-  
-  counter+=nups2ccs;
-  //ATLAS ups(2S)
-  const int nups2acs=ns[10];
-  float dataups2acs[5][nups2acs];
-  for(int i=0; i<nups2acs; i++)
-    {
-      dataups2acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
-      dataups2acs[1][i]=datasigma[1][i+counter]*param[30]*param[26];
-      dataups2acs[2][i]=datasigma[2][i+counter]*param[30]*param[26];
-      dataups2acs[3][i]=dataups2acs[0][i]-datasigma[5][i+counter];
-      dataups2acs[4][i]=datasigma[6][i+counter]-dataups2acs[0][i];
-    }
-
-  TCanvas *ups2cs = new TCanvas("ups2 cross section", "ups2 cross section", 700, 700);
-  ups2cs->SetLogy();
-  
-  TH1F *fups2cs = ups2cs->DrawFrame(xi, yi, xf, yf);
-  fups2cs->SetXTitle("p_{T}/M");
-  fups2cs->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups2cs->Modified();
-  ups2cs->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u2csection = new TGraphAsymmErrors(nups2ccs, dataups2ccs[0], dataups2ccs[1], dataups2ccs[3], dataups2ccs[4], dataups2ccs[2], dataups2ccs[2]);
-  u2csection->SetMarkerStyle(20);
-  u2csection->SetLineColor(kBlack);
-  u2csection->SetMarkerColor(kBlack);
-  u2csection->SetMarkerSize(.75);
-  u2csection->Draw("P");
-
-  //plot ATLAS data
-  TGraphAsymmErrors *u2asection = new TGraphAsymmErrors(nups2acs, dataups2acs[0], dataups2acs[1], dataups2acs[3], dataups2acs[4], dataups2acs[2], dataups2acs[2]);
-  u2asection->SetMarkerStyle(25);
-  u2asection->SetMarkerColor(kBlack);
-  u2asection->SetLineColor(kBlack);
-  u2asection->SetMarkerSize(.75);
-  u2asection->Draw("P");
-
-  //plot the fitted function and each contribution
-  TF1 *fitups2cs = new TF1("ups2 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups2cs->SetParameter(0, datasigma[9][counter]/(mass[5]));
-  fitups2cs->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups2cs->SetParameter(i, param[i+7]);
-  fitups2cs->SetParameter(7, param[5]);
-  fitups2cs->SetParameter(8, mass[5]);
-  for(int i=9; i<13; i++)
-    fitups2cs->SetParameter(i, param[i+5]);
-  fitups2cs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups2cs->SetParameter(14, mass[0]);
-  fitups2cs->SetLineColor(kBlue);
-  fitups2cs->Draw("lsame");
-
-  //text on the plot
-  TLatex lups2cs;
-  lups2cs.SetTextSize(0.03);
-  lups2cs.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups2cs.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups2cs.DrawLatex(0, 2.e-5, "pp 7 TeV");
-
-  //draw legend
-  TLegend *legups2cs = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups2cs->SetTextSize(0.03);
-  legups2cs->AddEntry(u2csection, "CMS #Upsilon(2S)", "p");
-  legups2cs->AddEntry(u2asection, "ATLAS #Upsilon(2S)", "p");
-  legups2cs->AddEntry(fitups2cs, "model", "l");
-  legups2cs->Draw();
-  //save ups(2S) cross section plot
-  ups2cs->SaveAs("plots/ups2S_cs.pdf");
-
-  //CMS ups(1S)
-  const int nups1ccs=ns[11];
-  counter+=nups2acs;
-  float dataups1ccs[5][nups1ccs];
-  for(int i=0; i<nups1ccs; i++)
-    {
-      dataups1ccs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
-      dataups1ccs[1][i]=datasigma[1][i+counter]*param[28]*param[27];
-      dataups1ccs[2][i]=datasigma[2][i+counter]*param[28]*param[27];
-      dataups1ccs[3][i]=dataups1ccs[0][i]-datasigma[5][i+counter];
-      dataups1ccs[4][i]=datasigma[6][i+counter]-dataups1ccs[0][i];
-    }
-  
-  counter+=nups1ccs;
-  //ATLAS ups(1S)
-  const int nups1acs=ns[12];
-  float dataups1acs[5][nups1acs];
-  for(int i=0; i<nups1acs; i++)
-    {
-      dataups1acs[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
-      dataups1acs[1][i]=datasigma[1][i+counter]*param[30]*param[27];
-      dataups1acs[2][i]=datasigma[2][i+counter]*param[30]*param[27];
-      dataups1acs[3][i]=dataups1acs[0][i]-datasigma[5][i+counter];
-      dataups1acs[4][i]=datasigma[6][i+counter]-dataups1acs[0][i];
-    }
-  
-  TCanvas *ups1cs = new TCanvas("ups1 cross section", "ups1 cross section", 700, 700);
-  ups1cs->SetLogy();
-  
-  TH1F *fups1cs = ups1cs->DrawFrame(xi, yi, xf, yf);
-  fups1cs->SetXTitle("p_{T}/M");
-  fups1cs->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups1cs->Modified();
-  ups1cs->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u1csection = new TGraphAsymmErrors(nups1ccs, dataups1ccs[0], dataups1ccs[1], dataups1ccs[3], dataups1ccs[4], dataups1ccs[2], dataups1ccs[2]);
-  u1csection->SetMarkerStyle(20);
-  u1csection->SetLineColor(kBlack);
-  u1csection->SetMarkerColor(kBlack);
-  u1csection->SetMarkerSize(.75);
-  u1csection->Draw("P");
-
-  //plot ATLAS data
-  TGraphAsymmErrors *u1asection = new TGraphAsymmErrors(nups1acs, dataups1acs[0], dataups1acs[1], dataups1acs[3], dataups1acs[4], dataups1acs[2], dataups1acs[2]);
-  u1asection->SetMarkerStyle(25);
-  u1asection->SetMarkerColor(kBlack);
-  u1asection->SetLineColor(kBlack);
-  u1asection->SetMarkerSize(.75);
-  u1asection->Draw("P");
-  
-  //plot the fitted function and each contribution
-  TF1 *fitups1cs = new TF1("ups1 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups1cs->SetParameter(0, datasigma[9][counter]/(mass[6]));
-  fitups1cs->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups1cs->SetParameter(i, param[i+7]);
-  fitups1cs->SetParameter(7, param[8]);
-  fitups1cs->SetParameter(8, mass[6]);
-  for(int i=9; i<13; i++)
-    fitups1cs->SetParameter(i, param[i+5]);
-  fitups1cs->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups1cs->SetParameter(14, mass[0]);
-  fitups1cs->SetLineColor(kBlue);
-  fitups1cs->Draw("lsame");
-
-  //text on the plot
-  TLatex lups1cs;
-  lups1cs.SetTextSize(0.03);
-  lups1cs.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups1cs.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups1cs.DrawLatex(0, 2.e-5, "pp 7 TeV");
-
-  //draw legend
-  TLegend *legups1cs = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups1cs->SetTextSize(0.03);
-  legups1cs->AddEntry(u1csection, "CMS #Upsilon(1S)", "p");
-  legups1cs->AddEntry(u1asection, "ATLAS #Upsilon(1S)", "p");
-  legups1cs->AddEntry(fitups1cs, "model", "l");
-  legups1cs->Draw();
-  //save ups(1S) cross section plot
-  ups1cs->SaveAs("plots/ups1S_cs.pdf");
-
-  //13 TeV psiprime
-  counter+=nups1acs;
-  const int npsipccs13=ns[13];
-  float datapsipccs13[5][npsipccs13];
-  for(int i=0; i<npsipccs13; i++)
-    {
-      datapsipccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[0]), param[9], param[10], param[11], param[12], param[13], param[0], mass[0], param[14], param[15], param[16], param[17], 0);
-      datapsipccs13[1][i]=datasigma[1][i+counter]*param[31]*param[18];
-      datapsipccs13[2][i]=datasigma[2][i+counter]*param[31]*param[18];
-      datapsipccs13[3][i]=datapsipccs13[0][i]-datasigma[5][i+counter];
-      datapsipccs13[4][i]=datasigma[6][i+counter]-datapsipccs13[0][i];
-    }
-  
-  TCanvas *psipcs13 = new TCanvas("psip13 cross section", "psip13 cross section", 700, 700);
-  psipcs13->SetLogy();
-  
-  TH1F *fpsipcs13 = psipcs13->DrawFrame(xi, yi, xf, yf);
-  fpsipcs13->SetXTitle("p_{T}/M");
-  fpsipcs13->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  fpsipcs13->GetYaxis()->SetTitleOffset(1);
-  psipcs13->Modified();
-  psipcs13->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *pcsection13 = new TGraphAsymmErrors(npsipccs13, datapsipccs13[0], datapsipccs13[1], datapsipccs13[3], datapsipccs13[4], datapsipccs13[2], datapsipccs13[2]);
-  pcsection13->SetMarkerStyle(20);
-  pcsection13->SetLineColor(kBlack);
-  pcsection13->SetMarkerColor(kBlack);
-  pcsection13->SetMarkerSize(.75);
-  pcsection13->Draw("P");
-
-  //plot the fitted function and each contribution
-  TF1 *fitpsipcs13 = new TF1("psip13 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitpsipcs13->SetParameter(0, datasigma[9][counter]/(mass[0]));
-  fitpsipcs13->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitpsipcs13->SetParameter(i, param[i+7]);
-  fitpsipcs13->SetParameter(7, param[0]);
-  fitpsipcs13->SetParameter(8, mass[0]);
-  for(int i=9; i<13; i++)
-    fitpsipcs13->SetParameter(i, param[i+5]);
-  fitpsipcs13->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitpsipcs13->SetParameter(14, mass[0]);
-  fitpsipcs13->SetLineColor(kBlue);
-  fitpsipcs13->Draw("lsame");
-
-  //text on the plot
-  TLatex lpsipcs13;
-  lpsipcs13.SetTextSize(0.03);
-  lpsipcs13.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lpsipcs13.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  lpsipcs13.DrawLatex(0, 2.e-5, "pp 13 TeV");
-
-  //draw legend
-  TLegend *legpsipcs13 = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legpsipcs13->SetTextSize(0.03);
-  legpsipcs13->AddEntry(pcsection13, "CMS #psi(2S)", "p");
-  legpsipcs13->AddEntry(fitpsipcs13, "model", "l");
-  legpsipcs13->Draw();
-  //save psiprime cross section plot
-  psipcs13->SaveAs("plots/psiprime_cs_13.pdf");
-  
-  //plot of j/psi results
-  //cross section plot
-  //CMS data
-  counter+=npsipccs13;
-  const int njpsics13=ns[14];
-  float datajpsics13[5][njpsics13];
-  for(int i=0; i<njpsics13; i++)
-    {
-      datajpsics13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[3]), param[9], param[10], param[11], param[12], param[13], param[3], mass[3], param[14], param[15], param[16], param[17], 3);
-      datajpsics13[1][i]=datasigma[1][i+counter]*param[31]*param[22];
-      datajpsics13[2][i]=datasigma[2][i+counter]*param[31]*param[22];
-      datajpsics13[3][i]=datajpsics13[0][i]-datasigma[5][i+counter];
-      datajpsics13[4][i]=datasigma[6][i+counter]-datajpsics13[0][i];
-    }
-  
-  TCanvas *jpsics13 = new TCanvas("jpsi13 cross section", "jpsi13 cross section", 700, 700);
-  jpsics13->SetLogy();
-  
-  TH1F *fjpsics13 = jpsics13->DrawFrame(xi, yi, xf, yf);
-  fjpsics13->SetXTitle("p_{T}/M");
-  fjpsics13->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  jpsics13->Modified();
-  jpsics13->SetTitle("");
-  
-  //plot data
-  TGraphAsymmErrors *jsection13 = new TGraphAsymmErrors(njpsics13, datajpsics13[0], datajpsics13[1], datajpsics13[3], datajpsics13[4], datajpsics13[2], datajpsics13[2]);
-  jsection13->SetMarkerStyle(20);
-  jsection13->SetLineColor(kBlack);
-  jsection13->SetMarkerColor(kBlack);
-  jsection13->SetMarkerSize(.75);
-  jsection13->Draw("P");
-
-  //plot the fitted function
-  TF1 *fitjpsics13 = new TF1("jpsi cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitjpsics13->SetParameter(0, datasigma[9][counter]/(mass[3]));
-  fitjpsics13->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitjpsics13->SetParameter(i, param[i+7]);
-  fitjpsics13->SetParameter(7, param[3]);
-  fitjpsics13->SetParameter(8, mass[3]);
-  for(int i=9; i<13; i++)
-    fitjpsics13->SetParameter(i, param[i+5]);
-  fitjpsics13->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitjpsics13->SetParameter(14, mass[0]);
-  fitjpsics13->SetLineColor(kBlue);
-  fitjpsics13->Draw("lsame");
-
-  //text on the plot
-  TLatex ljpsics13;
-  ljpsics13.SetTextSize(0.03);
-  ljpsics13.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  ljpsics13.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.0f%%", 100*chiprob));
-  ljpsics13.DrawLatex(0, 2.e-5, "pp 13 TeV");
-
-  //draw legend
-  TLegend *legjpsics13 = new TLegend(0.6, 0.75, 0.9, 0.9);
-  legjpsics13->SetTextSize(0.03);
-  legjpsics13->AddEntry(jsection13, "CMS J/#psi", "p");
-  legjpsics13->AddEntry(fitjpsics13, "model", "l");
-  legjpsics13->Draw();
-  //save jpsi cross section plot
-  jpsics13->SaveAs("plots/jpsi_cs_13.pdf");
-
-  //CMS ups(3S)
-  const int nups3ccs13=ns[15];
-  counter+=njpsics13;
-  float dataups3ccs13[5][nups3ccs13];
-  for(int i=0; i<nups3ccs13; i++)
-    {
-      dataups3ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/(mass[4]), param[9], param[10], param[11], param[12], param[13], param[4], mass[4], param[14], param[15], param[16], param[17], 4);
-      dataups3ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[25];
-      dataups3ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[25];
-      dataups3ccs13[3][i]=dataups3ccs13[0][i]-datasigma[5][i+counter];
-      dataups3ccs13[4][i]=datasigma[6][i+counter]-dataups3ccs13[0][i];
-    }
-
-  TCanvas *ups3cs13 = new TCanvas("ups313 cross section", "ups313 cross section", 700, 700);
-  ups3cs13->SetLogy();
-  
-  TH1F *fups3cs13 = ups3cs13->DrawFrame(xi, yi, xf, yf);
-  fups3cs13->SetXTitle("p_{T}/M");
-  fups3cs13->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups3cs13->Modified();
-  ups3cs13->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u3csection13 = new TGraphAsymmErrors(nups3ccs13, dataups3ccs13[0], dataups3ccs13[1], dataups3ccs13[3], dataups3ccs13[4], dataups3ccs13[2], dataups3ccs13[2]);
-  u3csection13->SetMarkerStyle(20);
-  u3csection13->SetLineColor(kBlack);
-  u3csection13->SetMarkerColor(kBlack);
-  u3csection13->SetMarkerSize(.75);
-  u3csection13->Draw("P");
-
-  //plot the fitted function and each contribution
-  TF1 *fitups3cs13 = new TF1("ups3 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups3cs13->SetParameter(0, datasigma[9][counter]/(mass[4]));
-  fitups3cs13->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups3cs13->SetParameter(i, param[i+7]);
-  fitups3cs13->SetParameter(7, param[4]);
-  fitups3cs13->SetParameter(8, mass[4]);
-  for(int i=9; i<13; i++)
-    fitups3cs13->SetParameter(i, param[i+5]);
-  fitups3cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups3cs13->SetParameter(14, mass[0]);
-  fitups3cs13->SetLineColor(kBlue);
-  fitups3cs13->Draw("lsame");
-  
-  //text on the plot
-  TLatex lups3cs13;
-  lups3cs13.SetTextSize(0.03);
-  lups3cs13.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups3cs13.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups3cs13.DrawLatex(0, 2.e-5, "pp 13 TeV");
-
-  //draw legend
-  TLegend *legups3cs13 = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups3cs13->SetTextSize(0.03);
-  legups3cs13->AddEntry(u3csection13, "CMS #Upsilon(3S)", "p");
-  legups3cs13->AddEntry(fitups3cs13, "model", "l");
-  legups3cs13->Draw();
-  //save ups(3S) cross section plot
-  ups3cs13->SaveAs("plots/ups3S_cs_13.pdf");
-
-  //CMS ups(2S)
-  const int nups2ccs13=ns[16];
-  counter+=nups3ccs13;
-  float dataups2ccs13[5][nups2ccs13];
-  for(int i=0; i<nups2ccs13; i++)
-    {
-      dataups2ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[5]), param[9], param[10], param[11], param[12], param[13], param[5], mass[5], param[14], param[15], param[16], param[17], 5);
-      dataups2ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[26];
-      dataups2ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[26];
-      dataups2ccs13[3][i]=dataups2ccs13[0][i]-datasigma[5][i+counter];
-      dataups2ccs13[4][i]=datasigma[6][i+counter]-dataups2ccs13[0][i];
-    }
-
-  TCanvas *ups2cs13 = new TCanvas("ups213 cross section", "ups213 cross section", 700, 700);
-  ups2cs13->SetLogy();
-  
-  TH1F *fups2cs13 = ups2cs13->DrawFrame(xi, yi, xf, yf);
-  fups2cs13->SetXTitle("p_{T}/M");
-  fups2cs13->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups2cs13->Modified();
-  ups2cs13->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u2csection13 = new TGraphAsymmErrors(nups2ccs13, dataups2ccs13[0], dataups2ccs13[1], dataups2ccs13[3], dataups2ccs13[4], dataups2ccs13[2], dataups2ccs13[2]);
-  u2csection13->SetMarkerStyle(20);
-  u2csection13->SetLineColor(kBlack);
-  u2csection13->SetMarkerColor(kBlack);
-  u2csection13->SetMarkerSize(.75);
-  u2csection13->Draw("P");
-
-  //plot the fitted function and each contribution
-  TF1 *fitups2cs13 = new TF1("ups2 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups2cs13->SetParameter(0, datasigma[9][counter]/(mass[5]));
-  fitups2cs13->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups2cs13->SetParameter(i, param[i+7]);
-  fitups2cs13->SetParameter(7, param[5]);
-  fitups2cs13->SetParameter(8, mass[5]);
-  for(int i=9; i<13; i++)
-    fitups2cs13->SetParameter(i, param[i+5]);
-  fitups2cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups2cs13->SetParameter(14, mass[0]);
-  fitups2cs13->SetLineColor(kBlue);
-  fitups2cs13->Draw("lsame");
-
-  //text on the plot
-  TLatex lups2cs13;
-  lups2cs13.SetTextSize(0.03);
-  lups2cs13.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups2cs13.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups2cs13.DrawLatex(0, 2.e-5, "pp 13 TeV");
-
-  //draw legend
-  TLegend *legups2cs13 = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups2cs13->SetTextSize(0.03);
-  legups2cs13->AddEntry(u2csection13, "CMS #Upsilon(2S)", "p");
-  legups2cs13->AddEntry(fitups2cs13, "model", "l");
-  legups2cs13->Draw();
-  //save ups(2S) cross section plot
-  ups2cs13->SaveAs("plots/ups2S_cs_13.pdf");
-
-  //CMS ups(1S)
-  const int nups1ccs13=ns[17];
-  counter+=nups2ccs13;
-  float dataups1ccs13[5][nups1ccs13];
-  for(int i=0; i<nups1ccs13; i++)
-    {
-      dataups1ccs13[0][i]=avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter],datasigma[8][i+counter], datasigma[9][i+counter]/(mass[6]), param[9], param[10], param[11], param[12], param[13], param[8], mass[6], param[14], param[15], param[16], param[17], 6);
-      dataups1ccs13[1][i]=datasigma[1][i+counter]*param[31]*param[27];
-      dataups1ccs13[2][i]=datasigma[2][i+counter]*param[31]*param[27];
-      dataups1ccs13[3][i]=dataups1ccs13[0][i]-datasigma[5][i+counter];
-      dataups1ccs13[4][i]=datasigma[6][i+counter]-dataups1ccs13[0][i];
-    }
-  
-  TCanvas *ups1cs13 = new TCanvas("ups113 cross section", "ups113 cross section", 700, 700);
-  ups1cs13->SetLogy();
-  
-  TH1F *fups1cs13 = ups1cs13->DrawFrame(xi, yi, xf, yf);
-  fups1cs13->SetXTitle("p_{T}/M");
-  fups1cs13->SetYTitle("d#sigma / dp_{T} (nb/GeV)");
-  ups1cs13->Modified();
-  ups1cs13->SetTitle("");
-
-  //plot CMS data
-  TGraphAsymmErrors *u1csection13 = new TGraphAsymmErrors(nups1ccs13, dataups1ccs13[0], dataups1ccs13[1], dataups1ccs13[3], dataups1ccs13[4], dataups1ccs13[2], dataups1ccs13[2]);
-  u1csection13->SetMarkerStyle(20);
-  u1csection13->SetLineColor(kBlack);
-  u1csection13->SetMarkerColor(kBlack);
-  u1csection13->SetMarkerSize(.75);
-  u1csection13->Draw("P");
-  
-  //plot the fitted function and each contribution
-  TF1 *fitups1cs13 = new TF1("ups1 cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, xf);
-  fitups1cs13->SetParameter(0, datasigma[9][counter]/(mass[6]));
-  fitups1cs13->SetParameter(1, datasigma[8][counter]/2);
-  for(int i=2; i<7; i++)
-    fitups1cs13->SetParameter(i, param[i+7]);
-  fitups1cs13->SetParameter(7, param[8]);
-  fitups1cs13->SetParameter(8, mass[6]);
-  for(int i=9; i<13; i++)
-    fitups1cs13->SetParameter(i, param[i+5]);
-  fitups1cs13->SetParameter(13, datasigma[9][0]/(mass[0]));
-  fitups1cs13->SetParameter(14, mass[0]);
-  fitups1cs13->SetLineColor(kBlue);
-  fitups1cs13->Draw("lsame");
-
-  //text on the plot
-  TLatex lups1cs13;
-  lups1cs13.SetTextSize(0.03);
-  lups1cs13.DrawLatex(8, 50, Form("#chi^{2}/ndf = %.0f/%d", minimum, ndf));
-  lups1cs13.DrawLatex(8, 20, Form("P(#chi^{2},ndf) = %.2g%%", 100*chiprob));
-  lups1cs13.DrawLatex(0, 2.e-5, "pp 13 TeV");
-
-  //draw legend
-  TLegend *legups1cs13 = new TLegend(0.6, 0.7, 0.9, 0.9);
-  legups1cs13->SetTextSize(0.03);
-  legups1cs13->AddEntry(u1csection13, "CMS #Upsilon(1S)", "p");
-  legups1cs13->AddEntry(fitups1cs13, "model", "l");
-  legups1cs13->Draw();
-  //save ups(1S) cross section plot
-  ups1cs13->SaveAs("plots/ups1S_cs_13.pdf");
+  //chib2 / chib1 ratio 7 TeV
+  //customizable options
+  lumibr[0] = param[23]/param[24];
+  legtitles[0] = "CMS #chi_{b2} / #chi_{b1}";
+  mkrStyle[0] = 20;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[ctr+j];
+  testc = rplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  ctr+=ndata[xplot];
+  xplot++;
   
   //part: plotting the "pulls" - maintaining the uncertainty, though
-  double cs, y, pt, dpt, dy, npt;
+  /*double cs, y, pt, dpt, dy, npt;
   int nmin = 3, ny=4, nsteps;
   double dn = (8.-3.)/39., signc = sigplot(datasigma[9][0]/(mass[0]), 4, 0, param[9], param[10], param[11], param[12], param[13], 1., mass[0], param[14], param[15], param[16], param[17]);
   
@@ -1911,5 +1165,5 @@ void plot()
   legpups113->AddEntry(u1cpull13, "CMS #Upsilon(1S)", "p");
   legpups113->Draw();
   //save ups2 cross section plot
-  pups113->SaveAs("plots/ups1S_pull_13.pdf");
+  pups113->SaveAs("plots/ups1S_pull_13.pdf");*/
 }

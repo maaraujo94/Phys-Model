@@ -14,7 +14,7 @@ const int nstates = 18;
 int ns[nstates] = {0};
 
 //psi', chi_c2, chi_c1, jpsi, ups(3S), ups(2S), ups(1S)
-float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
+float mass[7] = {3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
 
 //////////////////////////////////////
 //part: the log-likelihood function
@@ -42,33 +42,33 @@ double myFunction(double Lpsip, double Lchic2, double Lchic1, double Ljpsi, doub
   //cycle for cross section measurements
   for(int stateid = 0; stateid < nstates-2; stateid++)
     if(ns[stateid] != 0) {
-      loglike+= statecont(datasigma, pars, signc, ptmmin, Mstate[stateid], Lstate[stateid], lumistate[stateid], BRstate[stateid], pos, ns[stateid]);
+      loglike += statecont(datasigma, pars, signc, ptmmin, Mstate[stateid], Lstate[stateid], lumistate[stateid], BRstate[stateid], pos, ns[stateid]);
       pos += ns[stateid];
     }
   //cycle for cross section ratio measurements
   for(int stateid = nstates-2; stateid < nstates; stateid++)
     if(ns[stateid] != 0) {
-      loglike+= ratiocont(datasigma, pars, signc, ptmmin, Mstate[stateid], Lchic2, Lchic1, BRstate[stateid], pos, ns[stateid]);
+      loglike += ratiocont(datasigma, pars, signc, ptmmin, Mstate[stateid], Lchic2, Lchic1, BRstate[stateid], pos, ns[stateid]);
       pos += ns[stateid];
     } 
   
   //constraints for the BR nuisance parameters
-  loglike-=0.5*((brpsipdm-1)/(0.9/7.9))*((brpsipdm-1)/(0.9/7.9));
-  loglike-=0.5*((brpsipdp-1)/(0.3/34.46))*((brpsipdp-1)/(0.3/34.46));
-  loglike-=0.5*((brc2jpsi-1)/(0.7/19.2))*((brc2jpsi-1)/(0.7/19.2));
-  loglike-=0.5*((brc1jpsi-1)/(1.2/33.9))*((brc1jpsi-1)/(1.2/33.9));
-  loglike-=0.5*((brjpsidm-1)/(0.033/5.961))*((brjpsidm-1)/(0.033/5.961));
-  loglike-=0.5*((brb2ups1-1)/(1.2/19.1))*((brb2ups1-1)/(1.2/19.1));
-  loglike-=0.5*((brb1ups1-1)/(2.2/33.9))*((brb1ups1-1)/(2.2/33.9));
-  loglike-=0.5*((brups3dm-1)/(0.21/2.18))*((brups3dm-1)/(0.21/2.18));
-  loglike-=0.5*((brups2dm-1)/(0.17/1.93))*((brups2dm-1)/(0.17/1.93));
-  loglike-=0.5*((brups1dm-1)/(0.05/2.48))*((brups1dm-1)/(0.05/2.48));
+  loglike -= 0.5*((brpsipdm-1)/(0.9/7.9))*((brpsipdm-1)/(0.9/7.9));
+  loglike -= 0.5*((brpsipdp-1)/(0.3/34.46))*((brpsipdp-1)/(0.3/34.46));
+  loglike -= 0.5*((brc2jpsi-1)/(0.7/19.2))*((brc2jpsi-1)/(0.7/19.2));
+  loglike -= 0.5*((brc1jpsi-1)/(1.2/33.9))*((brc1jpsi-1)/(1.2/33.9));
+  loglike -= 0.5*((brjpsidm-1)/(0.033/5.961))*((brjpsidm-1)/(0.033/5.961));
+  loglike -= 0.5*((brb2ups1-1)/(1.2/19.1))*((brb2ups1-1)/(1.2/19.1));
+  loglike -= 0.5*((brb1ups1-1)/(2.2/33.9))*((brb1ups1-1)/(2.2/33.9));
+  loglike -= 0.5*((brups3dm-1)/(0.21/2.18))*((brups3dm-1)/(0.21/2.18));
+  loglike -= 0.5*((brups2dm-1)/(0.17/1.93))*((brups2dm-1)/(0.17/1.93));
+  loglike -= 0.5*((brups1dm-1)/(0.05/2.48))*((brups1dm-1)/(0.05/2.48));
   
   //constraints for the luminosity nuisance parameters
-  loglike-=0.5*((lcms-1)/2.2e-2)*((lcms-1)/2.2e-2);
-  loglike-=0.5*((latlas-1)/1.8e-2)*((latlas-1)/1.8e-2);
-  loglike-=0.5*((latlasups-1)/3.9e-2)*((latlasups-1)/3.9e-2);
-  loglike-=0.5*((lcms13-1)/2.2e-2)*((lcms13-1)/2.2e-2);
+  loglike -= 0.5*((lcms-1)/2.2e-2)*((lcms-1)/2.2e-2);
+  loglike -= 0.5*((latlas-1)/1.8e-2)*((latlas-1)/1.8e-2);
+  loglike -= 0.5*((latlasups-1)/3.9e-2)*((latlasups-1)/3.9e-2);
+  loglike -= 0.5*((lcms13-1)/2.2e-2)*((lcms13-1)/2.2e-2);
   
   //I am returning the chisquare because I can't figure out how to change the fit method (must check this)
   return -2*loglike;
@@ -77,7 +77,7 @@ double myFunction(double Lpsip, double Lchic2, double Lchic1, double Ljpsi, doub
 //Minuit-specific "wrapping"
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg)
 {
-  result=myFunction(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16], par[17], par[18], par[19], par[20], par[21], par[22], par[23], par[24], par[25], par[26], par[27], par[28], par[29], par[30], par[31], par[32]);
+  result = myFunction(par[0], par[1], par[2], par[3], par[4], par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14], par[15], par[16], par[17], par[18], par[19], par[20], par[21], par[22], par[23], par[24], par[25], par[26], par[27], par[28], par[29], par[30], par[31], par[32]);
 }
 
 //main function: collects data, does the fit, plots the results
@@ -161,23 +161,27 @@ void fit()
   fit->FixParameter(32);
 
   fit->ExecuteCommand("MIGRAD",0,0);
+
+  //////////////////////////////
+  // part: storing fit results
+  //////////////////////////////
   
   //register the fit parameters to an array
-  for(int i=0; i<nparam; i++)
-    param[i]=fit->GetParameter(i);
+  for(int i = 0; i < nparam; i++)
+    param[i] = fit->GetParameter(i);
   param[6] = param[1];
   param[7] = param[2];
   
-  chisquare=myFunction(param[0], param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], param[16], param[17], param[18], param[19], param[20], param[21], param[22], param[23], param[24], param[25], param[26], param[27], param[28], param[29], param[30], param[31], ptmmin);
+  chisquare = myFunction(param[0], param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], param[16], param[17], param[18], param[19], param[20], param[21], param[22], param[23], param[24], param[25], param[26], param[27], param[28], param[29], param[30], param[31], ptmmin);
 
-  ndf=0;
+  ndf = 0;
   //calculating the number of data points used in the fit
-  for(int i=0; i<(int)datasigma[0].size(); i++)
+  for(int i = 0; i < (int)datasigma[0].size(); i++)
     {
-      if(datasigma[0][i]>=ptmmin)
-	ndf+=1;
-      else if(datasigma[0][i]<ptmmin && (datasigma[3][i]==16 || datasigma[3][i]==17))
-      ndf+=1;
+      if(datasigma[0][i] >= ptmmin)
+	ndf += 1;
+      else if(datasigma[0][i] < ptmmin && (datasigma[3][i] == 16 || datasigma[3][i] == 17))
+      ndf += 1;
     }
   cout << ndf << " data points" << endl;
   //I am adding one degree of freedom for each of the nuisance parameters
@@ -189,12 +193,17 @@ void fit()
   cout << "chi^2 norm : " << chisquare/ndf  << endl;
   cout << "chi^2 prob : " << TMath::Prob(chisquare,ndf)  << endl;
 
+  //////////////////////////////////////
+  //part: saving results to an outfile
+  //////////////////////////////////////
+  
   outf.open("fit.txt");
-  for(int i=0; i<nparam; i++)
+  for(int i = 0; i < nparam; i++)
     outf << param[i] << " ";
-  for(int i=0; i<nparam; i++)
+  for(int i = 0; i < nparam; i++)
     outf << fit->GetParError(i) << " ";
   outf << ptmmin << " ";
   outf << chisquare << " " << ndf << endl;
   outf.close();
+
 }
