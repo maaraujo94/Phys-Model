@@ -76,8 +76,6 @@ void plot()
   //part: plotting data
   /////////////////////////
   
-  //float xi = -2, xf = 49.9, yi = 1.01e-5, yf = 9.99e2;
-
   //auxiliary functions storing plotting variables for all 14 plots
   //psi', chic2, chic1, jpsi, ups3, ups2, ups1, psi'13, jpsi13, ups313, ups213, ups113, chicr(state->Lpos2), chibr(state->Lpos2)
   const int nplots = 14;
@@ -88,13 +86,14 @@ void plot()
   string savename[nplots] = {"psiprime", "chic2", "chic1", "jpsi", "ups3S", "ups2S", "ups1S", "psiprime_13", "jpsi_13", "ups3S_13", "ups2S_13", "ups1S_13", "chicr", "chibr"};
   for(int i = 0; i < nplots; i++) {
     mqq[i] = mass[state[i]];
-    savename[i] = "plots/"+savename[i]+"_cs.pdf";
+    //savename[i] = "plots/"+savename[i]+"_cs.pdf";
+    savename[i] = "plots/"+savename[i];
   }
   mqq[nplots-2] = mass[3];
   mqq[nplots-1] = mass[6];
 
-  //testc - nr of datapoints, xplot - plot number, ctr - dataset number
-  int testc = 0, xplot = 0, ctr = 0;
+  //xplot - plot number, dst - dataset number
+  int xplot = 0, dst = 0;
   double lumibr[2];
   string legtitles[2];
   int mkrStyle[2], len[2];
@@ -109,9 +108,9 @@ void plot()
   mkrStyle[1] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
   
   //chic2 7 TeV
@@ -121,9 +120,9 @@ void plot()
   mkrStyle[0] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //chic1 7 TeV
@@ -133,9 +132,9 @@ void plot()
   mkrStyle[0] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
   
   //jpsi 7 TeV
@@ -145,9 +144,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(3S) 7 TeV
@@ -160,9 +159,9 @@ void plot()
   mkrStyle[1] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(2S) 7 TeV
@@ -175,9 +174,9 @@ void plot()
   mkrStyle[1] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(1S) 7 TeV
@@ -190,9 +189,9 @@ void plot()
   mkrStyle[1] = 25;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //psiprime 13 TeV
@@ -202,9 +201,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //jpsi 13 TeV
@@ -214,9 +213,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(3S) 13 TeV
@@ -226,9 +225,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(2S) 13 TeV
@@ -238,9 +237,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //ups(1S) 13 TeV
@@ -250,9 +249,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = csplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = csplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //chic2 / chic1 ratio 7 TeV
@@ -262,9 +261,9 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = rplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = rplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
 
   //chib2 / chib1 ratio 7 TeV
@@ -274,12 +273,35 @@ void plot()
   mkrStyle[0] = 20;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[ctr+j];
-  testc = rplot(datasigma, testc, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  ctr+=ndata[xplot];
+    len[j] = ns[dst+j];
+  counter = rplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
+  xplot++;
+
+  ////////////////////////////////////////////////////////////////////
+  //part: plotting the "pulls" - maintaining the uncertainty, though
+  ////////////////////////////////////////////////////////////////////
+
+  counter = 0;
+  xplot = 0;
+  dst = 0;
+  
+  //psiprime 7 TeV
+  //customizable options
+  lumibr[0] = param[28]*param[18];
+  lumibr[1] = param[29]*param[19]*param[22];
+  legtitles[0] = "CMS #psi(2S)";
+  legtitles[1] = "ATLAS #psi(2S)";
+  mkrStyle[0] = 20;
+  mkrStyle[1] = 25;
+  //this structure is constant for all plots
+  for(int j = 0; j < ndata[xplot]; j++)
+    len[j] = ns[dst+j];
+  counter = cspull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  dst+=ndata[xplot];
   xplot++;
   
-  //part: plotting the "pulls" - maintaining the uncertainty, though
+  
   /*double cs, y, pt, dpt, dy, npt;
   int nmin = 3, ny=4, nsteps;
   double dn = (8.-3.)/39., signc = sigplot(datasigma[9][0]/(mass[0]), 4, 0, param[9], param[10], param[11], param[12], param[13], 1., mass[0], param[14], param[15], param[16], param[17]);

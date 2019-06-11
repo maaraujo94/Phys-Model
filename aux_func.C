@@ -300,6 +300,7 @@ int csplot(vector <vector <double> > &datasigma, int init_i, const int nstates, 
   leg->Draw();
   
   //save psiprime plot
+  savename = savename+"_cs.pdf";
   const char* save = savename.c_str();
   c->SaveAs(save);
   c->Destructor();
@@ -386,6 +387,7 @@ int rplot(vector <vector <double> > &datasigma, int init_i, const int nstates, i
   leg->Draw();
   
   //save psiprime plot
+  savename = savename+".pdf";
   const char* save = savename.c_str();
   c->SaveAs(save);
   c->Destructor();
@@ -393,3 +395,104 @@ int rplot(vector <vector <double> > &datasigma, int init_i, const int nstates, i
   return counter;
 }
 
+int cspull(vector <vector <double> > &datasigma, int init_i, const int nstates, int *len,
+	   double mqq, double *param, int Lpos, int state, double *lumibr,
+	   double ptmmin, double chisquare, int ndf, double chiprob,
+	   int *mkrStyle, string *legtitles, string savename)
+{
+  double m_psip = 3.686;
+  double xi = -2, xf = 49.9;
+  
+  int nmin = 3, nmax = 8, npt, ny = 4, nsteps;
+  double cs, pt, y, dpt, dy, dn = (nmax - nmin) / 39.;
+  double norm = sigplot(datasigma[9][0]/m_psip, 4, 0, param[9], param[10], param[11], param[12], param[13], 1., m_psip, param[14], param[15], param[16], param[17]);
+  
+  //defining canvas
+  TCanvas *c = new TCanvas("cs pull", "cs pull", 700, 700);
+  
+  TH1F *fc = c->DrawFrame(xi, -2, xf, 2);
+  fc->SetXTitle("p_{T}/M");
+  fc->SetYTitle("pulls");
+  fc->GetYaxis()->SetTitleOffset(1);
+  c->Modified();
+  c->SetTitle("");
+  
+  //cycle to define TGraphAsymmErrors
+  TGraphAsymmErrors** gc = new TGraphAsymmErrors*[nstates];
+  int counter = init_i;
+ 
+  for(int ctr = 0; ctr < nstates; ctr++) {
+    const int ndata = len[ctr];
+    float pullpts[5][ndata];
+    
+    for(int i = 0; i < ndata; i++) {
+      cs = 0;
+      dpt = datasigma[6][i+counter]-datasigma[5][i+counter];
+      dy = datasigma[8][i+counter]-datasigma[7][i+counter];
+      npt = nmin + int(0.5 + dn*(dpt*m_psip - 1.));
+
+      for(int xpt = 0; xpt < npt; xpt++)
+	{
+	  pt = datasigma[5][i+counter]+xpt*dpt/(npt-1.);
+	  for(int xy = 0; xy < ny; xy++)
+	    {
+	      y = datasigma[7][i+counter]+xy*dy/(ny-1.);
+	      cs += sigplot(datasigma[9][i+counter]/mqq, pt, y, param[9], param[10], param[11], param[12], param[13], param[Lpos], mqq, param[14], param[15], param[16], param[17]);
+	    }
+	}
+      nsteps = npt*ny;
+      cs/=(norm*nsteps);
+
+      pullpts[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/mqq, param[9], param[10], param[11], param[12], param[13], param[Lpos], mqq, param[14], param[15], param[16], param[17], state);
+      pullpts[1][i] = (datasigma[1][i+counter]*lumibr[ctr] - cs) / cs;
+      pullpts[2][i] = datasigma[2][i+counter]*lumibr[ctr] / cs;
+      pullpts[3][i] = pullpts[0][i] - datasigma[5][i+counter];
+      pullpts[4][i] = datasigma[6][i+counter] - pullpts[0][i];
+    }
+    counter += len[ctr];
+
+    gc[ctr] = new TGraphAsymmErrors(ndata, pullpts[0], pullpts[1], pullpts[3], pullpts[4], pullpts[2], pullpts[2]);
+    gc[ctr]->SetMarkerStyle(mkrStyle[ctr]);
+    gc[ctr]->SetLineColor(kBlack);
+    gc[ctr]->SetMarkerColor(kBlack);
+    gc[ctr]->SetMarkerSize(.75);
+    gc[ctr]->Draw("P");
+
+    for(int i = 0; i < ndata; i++)
+      if(pullpts[0][i] < ptmmin)
+	gc[ctr]->RemovePoint(0);
+    gc[ctr]->Draw("P");
+    
+  }
+  
+  //plot line at zero
+  TF1 *zero = new TF1("zero", "0", xi, xf);
+  zero->SetLineColor(kBlue);
+  zero->SetLineStyle(7);
+  zero->Draw("lsame");
+  
+  //text on the plot
+  TLatex lc;
+  lc.SetTextSize(0.03);
+  lc.DrawLatex(6, 1.7, Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+  lc.DrawLatex(6, 1.3, Form("P(#chi^{2},ndf) = %.1f%%", 100*chiprob));
+  lc.DrawLatex(0, -1.7, Form("pp %.0f TeV", datasigma[9][init_i]/1000.));
+
+  //draw legend
+  double endpt = 0.8 - (double)nstates*0.05;  
+  TLegend *leg = new TLegend(0.6, endpt, 0.9, 0.9);
+  leg->SetTextSize(0.03);
+  for(int i = 0; i < nstates; i++)  {
+    const char *st = legtitles[i].c_str();
+    leg->AddEntry(gc[i], st, "p");
+  }
+  leg->Draw();
+  
+  //save psiprime plot
+  savename = savename+"_cs_pull.pdf";
+  const char* save = savename.c_str();
+  c->SaveAs(save);
+  c->Destructor();
+
+  return counter;
+}
