@@ -90,6 +90,8 @@ double statecont(vector <vector <double> > &datasigma, double *pars, double scal
   pars[9] = mqq;
   pars[8] = Lstate;
 
+  //cycle over every position in datasigma for that state
+  //for each data pt, averages model over pt/M, y
   for(int i = pos_i; i < pos_i+length; i++)
     if(datasigma[0][i] >= ptmmin) {
 
@@ -132,6 +134,8 @@ double ratiocont(vector <vector <double> > &datasigma, double *pars, double scal
   pars[0] = datasigma[9][pos_i]/mqq;
   pars[9] = mqq;
 
+  //cycle over every position in datasigma for that state
+  //for each data pt, averages model over pt/M, y
   for(int i = pos_i; i < pos_i+length; i++) {
 
     dpt = datasigma[6][i]-datasigma[5][i];
@@ -187,6 +191,7 @@ double lest(vector <vector <double> > &datasigma, float PTMNORM, int init_i, int
 ///////////////////////////////////////////
 
 //sigma function for plotting
+//takes params individually rather than through pointer 
 double sigplot(double sqsfm, double pTM, double y, double A, double beta, double tau, double rho, double delta, double L, double M, double b, double c, double d, double e)
 {
   double sum = 0;
@@ -207,7 +212,7 @@ double sigplot(double sqsfm, double pTM, double y, double A, double beta, double
   return sum;
 }
 
-//calculates the average pT/M of a bin by weighing it with the model cross section
+//calculates the average pT/M of a bin by weighing it with the model cs
 //uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
 double avgptm(double lbound, double ubound, double lybound, double uybound, double sqsfm, double A, double rho, double tau, double beta, double delta, double L, double M, double b, double c, double d, double e, int state)
 {
@@ -274,7 +279,7 @@ int rplot(vector <vector <double> > &datasigma, int init_i, const int nstates, i
     gc[ctr]->Draw("P");
   }
   
-  //plot the fitted function and each contribution
+  //plot the fitted function
   TF1 *fit = new TF1("ratio fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [13], [9], [10], [11], [12])/sigplot([0], x, [1], [2], [3], [4], [5], [6], [8], [13], [9], [10], [11], [12])", 0, 10);
   fit->SetParameter(0, datasigma[9][init_i]/mqq);
   fit->SetParameter(1, datasigma[8][init_i]/2);
@@ -306,7 +311,7 @@ int rplot(vector <vector <double> > &datasigma, int init_i, const int nstates, i
   leg->AddEntry(fit, "model", "l");
   leg->Draw();
   
-  //save psiprime plot
+  //save plot
   savename = savename+".pdf";
   const char* save = savename.c_str();
   c->SaveAs(save);
@@ -400,7 +405,7 @@ int csplotpull(vector <vector <double> > &datasigma, int init_i, const int nstat
 	gp[ctr]->RemovePoint(0);
   }
   
-  //plot the fitted function and each contribution
+  //plot the fitted function
   TF1 *fit = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, 49.9);
   fit->SetParameter(0, datasigma[9][init_i]/mqq);
   fit->SetParameter(1, datasigma[8][init_i]/2);
@@ -433,10 +438,12 @@ int csplotpull(vector <vector <double> > &datasigma, int init_i, const int nstat
   leg->AddEntry(fit, "model", "l");
   leg->Draw();
   
-  //save psiprime plot
+  //save cross section plot
   string csname = savename+"_cs.pdf";
   const char* save = csname.c_str();
   c->SaveAs(save);
+
+  //repeat plotting but for pulls
   c->Clear();
   c->SetLogy(0);
 
@@ -453,6 +460,7 @@ int csplotpull(vector <vector <double> > &datasigma, int init_i, const int nstat
   zero->SetLineStyle(7);
   zero->Draw("lsame");
 
+  //draw pulls
   for(int i = 0; i < nstates; i++)
     gp[i]->Draw("P");
   
@@ -472,7 +480,7 @@ int csplotpull(vector <vector <double> > &datasigma, int init_i, const int nstat
   }
   legp->Draw();
   
-  //save psiprime plot
+  //save pulls plot
   string pullname = savename+"_cs_pull.pdf";
   const char* savep = pullname.c_str();
   c->SaveAs(savep);

@@ -2,3 +2,6 @@
 *.d
 *.so
 *.pcm
+*.aux
+*.log
+*.gz

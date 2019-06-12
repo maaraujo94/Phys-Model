@@ -1,6 +1,6 @@
-/////////////////////////////////////////////////////////////////////////////
-//auxiliary file that defines the dataset input function
-/////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+//auxiliary file that defines the dataset input function  //
+////////////////////////////////////////////////////////////
 
 #include <fstream>
 using namespace std;
@@ -57,6 +57,7 @@ int readout(vector <vector <double> > &datasigma, string filename, double mass, 
   return ns;
 }
 
+// reads data from all desired files, according to the desired corrections
 void input(vector <vector <double> > &datasigma, int *ns)
 {
   float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};

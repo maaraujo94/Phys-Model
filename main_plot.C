@@ -1,14 +1,9 @@
-#include "TCanvas.h"
-#include "TGraphAsymmErrors.h"
-#include "TH1F.h"
-#include "TF1.h"
-#include "TLegend.h"
-#include "TLegendEntry.h"
-#include "TAxis.h"
+/////////////////////////////////////////////////////////
+// function that reads the fit results and plots them  //
+/////////////////////////////////////////////////////////
+
 #include "TMath.h"
 #include "TROOT.h"
-#include "TLatex.h"
-#include "TStyle.h"
 #include <fstream>
 using namespace std;
 
@@ -32,7 +27,7 @@ void plot()
 
   //////////////////////////////////
   //part: getting data from files
-  /////////////////////////////////
+  //////////////////////////////////
 
   input(datasigma, ns);
 
@@ -72,9 +67,9 @@ void plot()
   tex << "\\end{table}" << endl;
   tex.close();
 
-  //////////////////////////////
+  ///////////////////////////////
   //part: plotting data + pulls
-  //////////////////////////////
+  ///////////////////////////////
   
   //auxiliary functions storing plotting variables for all 14 plots
   //psi', chic2, chic1, jpsi, ups3, ups2, ups1, psi'13, jpsi13, ups313, ups213, ups113, chicr(state->Lpos2), chibr(state->Lpos2)
