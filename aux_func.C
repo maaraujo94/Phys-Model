@@ -1,3 +1,7 @@
+////////////////////////////////////////////////////////////////////////
+// auxiliary file that defines the functions used in main macros      //
+////////////////////////////////////////////////////////////////////////
+
 #include "TCanvas.h"
 #include "TGraphAsymmErrors.h"
 #include "TH1F.h"
@@ -9,9 +13,9 @@
 #include "TLatex.h"
 #include "TStyle.h"
 
-/////////////////////////////////////////////////////////////////////////////
-//auxiliary file that defines the functions used to calculate other functions
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////
+// part: auxiliary functions for fitting
+//////////////////////////////////////////
 
 //the parametrization of the pdf function
 double pdf(double x, double b, double c, double d, double e)
@@ -72,49 +76,7 @@ double sig(double *par)
   return sum;
 }
 
-//sigma function for plotting
-double sigplot(double sqsfm, double pTM, double y, double A, double beta, double tau, double rho, double delta, double L, double M, double b, double c, double d, double e)
-{
-  double sum = 0;
-  
-  double ylim = acosh( 1/pTM * ( sqsfm - sqrt(1+pTM*pTM) * cosh(y)));
-  double final = 26;
-  double dy = 2*ylim/(final-1.);
-  double y4 = -ylim;
-  double pars[13]={sqsfm, pTM, y, y4, A, beta, tau, rho, delta, b, c, d, e};
-  
-  for(int i=0; i < final; i++)
-    {
-      pars[3] = y4;
-      sum += ( pTM / pow(sqsfm, 2) ) * integf(pars) * dy * ( L / pow(M,5));
-      y4 += dy;
-    }
- 
-  return sum;
-}
-
-//calculates the average pT/M of a bin by weighing it with the model cross section
-//uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
-double avgptm(double lbound, double ubound, double lybound, double uybound, double sqsfm, double A, double rho, double tau, double beta, double delta, double L, double M, double b, double c, double d, double e, int state)
-{
-  float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
-  
-  double step=1.;
-  double stepy = 0.25;
-  double uint=0, lint=0;
-  double pars[14] = {sqsfm, 0., 0., A, rho, tau, beta, delta, L, M, b, c, d, e};
-  for(double pt=lbound+1e-10; pt<ubound+1.e-5; pt+=step/mass[state])
-    for(double y=lybound; y<uybound+1.e-5; y+=stepy)
-      {
-	pars[1] = pt;
-	pars[2] = y;
-      	uint+=sig(pars)*pt;
-	lint+=sig(pars);
-      }
-  return uint/lint;
-}
-
-// general function for any state
+// general contribution to chisquare for any state
 // mqq can be defined as the user prefers: M(state) or fixed Mc, Mb
 double statecont(vector <vector <double> > &datasigma, double *pars, double scale, double ptmmin,
 		 double mqq, double Lstate, double lumi, double br,
@@ -157,7 +119,7 @@ double statecont(vector <vector <double> > &datasigma, double *pars, double scal
   return factor;
 }
 
-// general function for ratios
+// general constribution to chisquare for ratios
 // mcb can be defined as the user prefers: M(state) or fixed Mc, Mb
 double ratiocont(vector <vector <double> > &datasigma, double *pars, double scale, double ptmmin,
 		 double mqq, double Lstate1, double Lstate2, double br,
@@ -205,6 +167,7 @@ double ratiocont(vector <vector <double> > &datasigma, double *pars, double scal
   return factor;
 }
 
+//used to obtain estimate for initialization of the L value
 double lest(vector <vector <double> > &datasigma, float PTMNORM, int init_i, int len_i)
 {
   double min_dpt = 100;
@@ -219,93 +182,50 @@ double lest(vector <vector <double> > &datasigma, float PTMNORM, int init_i, int
   return datasigma[1][min_i];
 }
 
-// plots data and fit function associated to a specific state, sqrt(s)
-// returns int val at which datasigma readout was left off
-// vectors len, lumibr, legtitles must be of size nstates, lumibr = lumi*br
-// TODO: Figure out how I'll do the different y bins: all in the same plot, one plot per y bin, only one f for all 5 bins?
-int csplot(vector <vector <double> > &datasigma, int init_i, const int nstates, int* len, 
-	   double mqq, double *param, int Lpos, int state, double *lumibr,
-	   double ptmmin, double chisquare, int ndf, double chiprob,
-	   int *mkrStyle, string* legtitles, string savename) {
+///////////////////////////////////////////
+// part: auxiliary functions for plotting
+///////////////////////////////////////////
 
-  double m_psip = 3.686;
-
-  //defining canvas
-  TCanvas *c = new TCanvas("cross section", "cross section", 700, 700);
-  c->SetLogy();
+//sigma function for plotting
+double sigplot(double sqsfm, double pTM, double y, double A, double beta, double tau, double rho, double delta, double L, double M, double b, double c, double d, double e)
+{
+  double sum = 0;
   
-  TH1F *fc = c->DrawFrame(-2, 1.01e-5, 49.9, 9.99e2);
-  fc->SetXTitle("p_{T}/M");
-  fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
-  fc->GetYaxis()->SetTitleOffset(1);
-  c->Modified();
-  c->SetTitle("");
+  double ylim = acosh( 1/pTM * ( sqsfm - sqrt(1+pTM*pTM) * cosh(y)));
+  double final = 26;
+  double dy = 2*ylim/(final-1.);
+  double y4 = -ylim;
+  double pars[13]={sqsfm, pTM, y, y4, A, beta, tau, rho, delta, b, c, d, e};
   
-  //cycle to define TGraphAsymmErrors
-  TGraphAsymmErrors** gc = new TGraphAsymmErrors*[nstates];
-  int counter = init_i;
- 
-  for(int ctr = 0; ctr < nstates; ctr++) {
-    const int ndata = len[ctr];
-    float datapts[5][ndata];
-
-    for(int i = 0; i < ndata; i++) {
-      datapts[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/mqq, param[9], param[10], param[11], param[12], param[13], param[Lpos], mqq, param[14], param[15], param[16], param[17], state);
-      datapts[1][i] = datasigma[1][i+counter]*lumibr[ctr];
-      datapts[2][i] = datasigma[2][i+counter]*lumibr[ctr];
-      datapts[3][i] = datapts[0][i] - datasigma[5][i+counter];
-      datapts[4][i] = datasigma[6][i+counter] - datapts[0][i];
+  for(int i=0; i < final; i++)
+    {
+      pars[3] = y4;
+      sum += ( pTM / pow(sqsfm, 2) ) * integf(pars) * dy * ( L / pow(M,5));
+      y4 += dy;
     }
-    counter += len[ctr];
+ 
+  return sum;
+}
 
-    gc[ctr] = new TGraphAsymmErrors(ndata, datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
-    gc[ctr]->SetMarkerStyle(mkrStyle[ctr]);
-    gc[ctr]->SetLineColor(kBlack);
-    gc[ctr]->SetMarkerColor(kBlack);
-    gc[ctr]->SetMarkerSize(.75);
-    gc[ctr]->Draw("P");
-  }
+//calculates the average pT/M of a bin by weighing it with the model cross section
+//uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
+double avgptm(double lbound, double ubound, double lybound, double uybound, double sqsfm, double A, double rho, double tau, double beta, double delta, double L, double M, double b, double c, double d, double e, int state)
+{
+  float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
   
-  //plot the fitted function and each contribution
-  TF1 *fit = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, 49.9);
-  fit->SetParameter(0, datasigma[9][init_i]/mqq);
-  fit->SetParameter(1, datasigma[8][init_i]/2);
-  for(int i=2; i<7; i++)
-    fit->SetParameter(i, param[i+7]);
-  fit->SetParameter(7, param[Lpos]);
-  fit->SetParameter(8, mqq);
-  for(int i=9; i<13; i++)
-    fit->SetParameter(i, param[i+5]);
-  fit->SetParameter(13, datasigma[9][0]/(m_psip));
-  fit->SetParameter(14, m_psip);
-  fit->SetLineColor(kBlue);
-  fit->Draw("lsame");
-  
-  //text on the plot
-  TLatex lc;
-  lc.SetTextSize(0.03);
-  lc.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-  lc.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.1f%%", 100*chiprob));
-  lc.DrawLatex(0, 2.e-5, Form("pp %.0f TeV", datasigma[9][init_i]/1000.));
-
-  //draw legend
-  double endpt = 0.8 - (double)nstates*0.05;  
-  TLegend *leg = new TLegend(0.6, endpt, 0.9, 0.9);
-  leg->SetTextSize(0.03);
-  for(int i = 0; i < nstates; i++)  {
-    const char *st = legtitles[i].c_str();
-    leg->AddEntry(gc[i], st, "p");
-  }
-  leg->AddEntry(fit, "model", "l");
-  leg->Draw();
-  
-  //save psiprime plot
-  savename = savename+"_cs.pdf";
-  const char* save = savename.c_str();
-  c->SaveAs(save);
-  c->Destructor();
-
-  return counter;
+  double step=1.;
+  double stepy = 0.25;
+  double uint=0, lint=0;
+  double pars[14] = {sqsfm, 0., 0., A, rho, tau, beta, delta, L, M, b, c, d, e};
+  for(double pt=lbound+1e-10; pt<ubound+1.e-5; pt+=step/mass[state])
+    for(double y=lybound; y<uybound+1.e-5; y+=stepy)
+      {
+	pars[1] = pt;
+	pars[2] = y;
+      	uint+=sig(pars)*pt;
+	lint+=sig(pars);
+      }
+  return uint/lint;
 }
 
 // plots data and fit function associated to a specific ratio of states, sqrt(s)
@@ -395,37 +315,52 @@ int rplot(vector <vector <double> > &datasigma, int init_i, const int nstates, i
   return counter;
 }
 
-int cspull(vector <vector <double> > &datasigma, int init_i, const int nstates, int *len,
+// plots data and fit function + pulls associated to a specific state, sqrt(s)
+// returns int val at which datasigma readout was left off
+// vectors len, lumibr, legtitles must be of size nstates, lumibr = lumi*br
+// TODO: Figure out how I'll do the different y bins: all in the same plot, one plot per y bin, only one f for all 5 bins?
+int csplotpull(vector <vector <double> > &datasigma, int init_i, const int nstates, int* len, 
 	   double mqq, double *param, int Lpos, int state, double *lumibr,
 	   double ptmmin, double chisquare, int ndf, double chiprob,
-	   int *mkrStyle, string *legtitles, string savename)
-{
+	   int *mkrStyle, string* legtitles, string savename) {
+
   double m_psip = 3.686;
-  double xi = -2, xf = 49.9;
-  
+  float xi = -2, xf = 49.9;
+
   int nmin = 3, nmax = 8, npt, ny = 4, nsteps;
   double cs, pt, y, dpt, dy, dn = (nmax - nmin) / 39.;
   double norm = sigplot(datasigma[9][0]/m_psip, 4, 0, param[9], param[10], param[11], param[12], param[13], 1., m_psip, param[14], param[15], param[16], param[17]);
   
   //defining canvas
-  TCanvas *c = new TCanvas("cs pull", "cs pull", 700, 700);
+  TCanvas *c = new TCanvas("cross section", "cross section", 700, 700);
+  c->SetLogy();
   
-  TH1F *fc = c->DrawFrame(xi, -2, xf, 2);
+  TH1F *fc = c->DrawFrame(xi, 1.01e-5, xf, 9.99e2);
   fc->SetXTitle("p_{T}/M");
-  fc->SetYTitle("pulls");
+  fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
   fc->GetYaxis()->SetTitleOffset(1);
   c->Modified();
   c->SetTitle("");
   
   //cycle to define TGraphAsymmErrors
   TGraphAsymmErrors** gc = new TGraphAsymmErrors*[nstates];
+  TGraphAsymmErrors** gp = new TGraphAsymmErrors*[nstates];
   int counter = init_i;
  
   for(int ctr = 0; ctr < nstates; ctr++) {
     const int ndata = len[ctr];
-    float pullpts[5][ndata];
+    float datapts[5][ndata];
+    float pullpts[2][ndata];
     
     for(int i = 0; i < ndata; i++) {
+      //data for cross section plots
+      datapts[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/mqq, param[9], param[10], param[11], param[12], param[13], param[Lpos], mqq, param[14], param[15], param[16], param[17], state);
+      datapts[1][i] = datasigma[1][i+counter]*lumibr[ctr];
+      datapts[2][i] = datasigma[2][i+counter]*lumibr[ctr];
+      datapts[3][i] = datapts[0][i] - datasigma[5][i+counter];
+      datapts[4][i] = datasigma[6][i+counter] - datapts[0][i];
+    
+      //calculation of the cross section as an average for higher precision pulls
       cs = 0;
       dpt = datasigma[6][i+counter]-datasigma[5][i+counter];
       dy = datasigma[8][i+counter]-datasigma[7][i+counter];
@@ -443,40 +378,49 @@ int cspull(vector <vector <double> > &datasigma, int init_i, const int nstates, 
       nsteps = npt*ny;
       cs/=(norm*nsteps);
 
-      pullpts[0][i] = avgptm(datasigma[5][i+counter], datasigma[6][i+counter], datasigma[7][i+counter], datasigma[8][i+counter], datasigma[9][i+counter]/mqq, param[9], param[10], param[11], param[12], param[13], param[Lpos], mqq, param[14], param[15], param[16], param[17], state);
-      pullpts[1][i] = (datasigma[1][i+counter]*lumibr[ctr] - cs) / cs;
-      pullpts[2][i] = datasigma[2][i+counter]*lumibr[ctr] / cs;
-      pullpts[3][i] = pullpts[0][i] - datasigma[5][i+counter];
-      pullpts[4][i] = datasigma[6][i+counter] - pullpts[0][i];
+      pullpts[0][i] = (datapts[1][i] - cs) / cs;
+      pullpts[1][i] = datapts[2][i] / cs;
     }
     counter += len[ctr];
 
-    gc[ctr] = new TGraphAsymmErrors(ndata, pullpts[0], pullpts[1], pullpts[3], pullpts[4], pullpts[2], pullpts[2]);
+    gc[ctr] = new TGraphAsymmErrors(ndata, datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
     gc[ctr]->SetMarkerStyle(mkrStyle[ctr]);
     gc[ctr]->SetLineColor(kBlack);
     gc[ctr]->SetMarkerColor(kBlack);
     gc[ctr]->SetMarkerSize(.75);
     gc[ctr]->Draw("P");
-
-    for(int i = 0; i < ndata; i++)
-      if(pullpts[0][i] < ptmmin)
-	gc[ctr]->RemovePoint(0);
-    gc[ctr]->Draw("P");
     
+    gp[ctr] = new TGraphAsymmErrors(ndata, datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
+    gp[ctr]->SetMarkerStyle(mkrStyle[ctr]);
+    gp[ctr]->SetLineColor(kBlack);
+    gp[ctr]->SetMarkerColor(kBlack);
+    gp[ctr]->SetMarkerSize(.75); 
+    for(int i = 0; i < ndata; i++)
+      if(datapts[0][i] < ptmmin)
+	gp[ctr]->RemovePoint(0);
   }
   
-  //plot line at zero
-  TF1 *zero = new TF1("zero", "0", xi, xf);
-  zero->SetLineColor(kBlue);
-  zero->SetLineStyle(7);
-  zero->Draw("lsame");
+  //plot the fitted function and each contribution
+  TF1 *fit = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])/sigplot([13], 4., 0., [2], [3], [4], [5], [6], 1., [14], [9], [10], [11], [12])", ptmmin, 49.9);
+  fit->SetParameter(0, datasigma[9][init_i]/mqq);
+  fit->SetParameter(1, datasigma[8][init_i]/2);
+  for(int i=2; i<7; i++)
+    fit->SetParameter(i, param[i+7]);
+  fit->SetParameter(7, param[Lpos]);
+  fit->SetParameter(8, mqq);
+  for(int i=9; i<13; i++)
+    fit->SetParameter(i, param[i+5]);
+  fit->SetParameter(13, datasigma[9][0]/(m_psip));
+  fit->SetParameter(14, m_psip);
+  fit->SetLineColor(kBlue);
+  fit->Draw("lsame");
   
   //text on the plot
   TLatex lc;
   lc.SetTextSize(0.03);
-  lc.DrawLatex(6, 1.7, Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-  lc.DrawLatex(6, 1.3, Form("P(#chi^{2},ndf) = %.1f%%", 100*chiprob));
-  lc.DrawLatex(0, -1.7, Form("pp %.0f TeV", datasigma[9][init_i]/1000.));
+  lc.DrawLatex(8, 20, Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+  lc.DrawLatex(8, 7, Form("P(#chi^{2},ndf) = %.1f%%", 100*chiprob));
+  lc.DrawLatex(0, 2.e-5, Form("pp %.0f TeV", datasigma[9][init_i]/1000.));
 
   //draw legend
   double endpt = 0.8 - (double)nstates*0.05;  
@@ -486,12 +430,52 @@ int cspull(vector <vector <double> > &datasigma, int init_i, const int nstates, 
     const char *st = legtitles[i].c_str();
     leg->AddEntry(gc[i], st, "p");
   }
+  leg->AddEntry(fit, "model", "l");
   leg->Draw();
   
   //save psiprime plot
-  savename = savename+"_cs_pull.pdf";
-  const char* save = savename.c_str();
+  string csname = savename+"_cs.pdf";
+  const char* save = csname.c_str();
   c->SaveAs(save);
+  c->Clear();
+  c->SetLogy(0);
+
+  TH1F *fp = c->DrawFrame(xi, -2, xf, 2);
+  fp->SetXTitle("p_{T}/M");
+  fp->SetYTitle("pulls");
+  fp->GetYaxis()->SetTitleOffset(1);
+  c->Modified();
+  c->SetTitle("");
+   
+  //plot line at zero
+  TF1 *zero = new TF1("zero", "0", xi, xf);
+  zero->SetLineColor(kBlue);
+  zero->SetLineStyle(7);
+  zero->Draw("lsame");
+
+  for(int i = 0; i < nstates; i++)
+    gp[i]->Draw("P");
+  
+  //text on the plot
+  TLatex lp;
+  lp.SetTextSize(0.03);
+  lp.DrawLatex(6, 1.7, Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+  lp.DrawLatex(6, 1.3, Form("P(#chi^{2},ndf) = %.1f%%", 100*chiprob));
+  lp.DrawLatex(0, -1.7, Form("pp %.0f TeV", datasigma[9][init_i]/1000.));
+
+  //draw legend
+  TLegend *legp = new TLegend(0.6, endpt+0.05, 0.9, 0.9);
+  legp->SetTextSize(0.03);
+  for(int i = 0; i < nstates; i++)  {
+    const char *st = legtitles[i].c_str();
+    legp->AddEntry(gc[i], st, "p");
+  }
+  legp->Draw();
+  
+  //save psiprime plot
+  string pullname = savename+"_cs_pull.pdf";
+  const char* savep = pullname.c_str();
+  c->SaveAs(savep);
   c->Destructor();
 
   return counter;
