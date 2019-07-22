@@ -19,6 +19,10 @@ int readout(vector <vector <double> > &datasigma, string filename, double mass, 
   int ns = 0;
 
   file.open(filename);
+  if(file.fail()) {
+    cout << "file " << filename << " not found" << endl;
+    return 0;
+  }
   if(file.is_open())
     while(getline(file,data))
       ns+=1;
@@ -51,7 +55,9 @@ int readout(vector <vector <double> > &datasigma, string filename, double mass, 
       datasigma[7].push_back(atof(nums[0]));
       datasigma[8].push_back(atof(nums[1]));
       datasigma[9].push_back(sqrts);
+    
     }
+  
   file.close();
 
   return ns;
@@ -60,84 +66,43 @@ int readout(vector <vector <double> > &datasigma, string filename, double mass, 
 // reads data from all desired files, according to the desired corrections
 void input(vector <vector <double> > &datasigma, int *ns)
 {
-  float mass[7]={3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
   int stateid = 0;
+  string fname;
+  // folder where I'll read the states
+  string orig = "data_first_test/";
   
   //read cross section measurements to a vector of form pt/M / cross section*MQuarkonium (nb/GeV) / uncertainty / data ID / K factor / pT/M bin bottom / pT/M bin top / y bin bottom / y bin top / sqrt(s)
   
-  //psiprime CMS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/CMS_psip_csection.txt", mass[0], 7.9e-3*1000, stateid, 7000, 0);
-  stateid++;
-
-  //psiprime ATLAS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/ATLAS_psip_csection.txt", mass[0], 5.961*34.46e-4*1000, stateid, 7000, 0);
-  stateid++; 
-  
-  //the ATLAS chic data must have the systematic uncertainty quadratically corrected for the luminosity uncertainty (included as a nuisance parameter)
-  //chic2 ATLAS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/ATLAS_chic2_csection.txt", mass[1], 1.5*5.961*19.2e-4*1000, stateid, 7000, 1);
-  stateid++; 
-
-  //chic1 ATLAS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/ATLAS_chic1_csection.txt", mass[2], 1.5*5.961*33.9e-4*1000, stateid, 7000, 1);
-  stateid++; 
-
   //jpsi CMS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/CMS_jpsi_csection.txt", mass[3], 5.961e-2*1000, stateid, 7000, 0);
+  ns[stateid] = readout(datasigma, orig+"CMS_jpsi_7_cs.txt", mass[0], 5.961e-2*1e3, stateid, 7000, 0);
   stateid++; 
 
-  //ups(3S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups3_csection.txt", mass[4], 2.4*2.18e4, stateid, 7000, 0);
+  //jpsi LHCb at 7 TeV (5 y bins)
+  for(int i = 0; i < 5; i++) {
+    fname = Form("LHCb_jpsi_7_cs_y%d.txt", i+1);
+    fname = orig+fname;
+    ns[stateid] = readout(datasigma, fname, mass[0], 1, stateid, 7000, 0);
   stateid++; 
-
-  //ups(3S) ATLAS
-  ns[stateid] = readout(datasigma, "data/ATLAS_ups3_csection.txt", mass[4], 2.18e4, stateid, 7000, 0);
-  stateid++; 
-
-  //ups(2S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups2_csection.txt", mass[5], 2.4*1.93e4, stateid, 7000, 0);
-  stateid++; 
-
-  //ups(2S) ATLAS
-  ns[stateid] = readout(datasigma, "data/ATLAS_ups2_csection.txt", mass[5], 1.93e4, stateid, 7000, 0);
-  stateid++; 
-
-  //ups(1S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups1_csection.txt", mass[6], 2.4*2.48e4, stateid, 7000, 0);
-  stateid++; 
-
-  //ups(1S) ATLAS
-  ns[stateid] = readout(datasigma, "data/ATLAS_ups1_csection.txt", mass[6], 2.48e4, stateid, 7000, 0);
-  stateid++; 
-
-  //13 TeV data, has uncertainties in percentage
-  //psiprime CMS
-  ns[stateid] = readout(datasigma, "data/CMS_psip_csection_13.txt", mass[0], 7.9e-3*1000, stateid, 13000, 2);
-  stateid++; 
-
-  //jpsi CMS
-  ns[stateid] = readout(datasigma, "data/CMS_jpsi_csection_13.txt", mass[3], 5.961e-2*1000, stateid, 13000, 2);
-  stateid++; 
-
-  //ups(3S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups3_csection_13.txt", mass[4], 2.18e-2*1000, stateid, 13000, 2);
-  stateid++; 
-
-  //ups(2S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups2_csection_13.txt", mass[5], 1.93e-2*1000, stateid, 13000, 2);
-  stateid++; 
-
-  //ups(1S) CMS
-  ns[stateid] = readout(datasigma, "data/CMS_ups1_csection_13.txt", mass[6], 2.48e-2*1000, stateid, 13000, 2);
-  stateid++; 
-
-  //cross section ratios
-  //chic2/chic1 ratio CMS at 7 TeV
-  ns[stateid] = readout(datasigma, "data/CMS_chic_ratio.txt", mass[3], 19.2/33.9, stateid, 7000, 3);
-  stateid++; 
+  }
   
-  //chib2/chib1 ratio CMS
-  ns[stateid] = readout(datasigma, "data/CMS_chib_ratio.txt", mass[6], 1., stateid, 7000, 3);
+  //ups(1S) CMS at 7 TeV
+  ns[stateid] = readout(datasigma, orig+"CMS_ups1_7_cs.txt", mass[4], 2.4*2.48e-2*1e6, stateid, 7000, 0);
   stateid++; 
-  
+
+  //ups(1S) ATLAS at 7 TeV (2 y bins)
+  for(int i = 0; i < 2; i++) {
+    fname = Form("ATLAS_ups1_7_cs_y%d.txt", i+1);
+    fname = orig+fname;
+    ns[stateid] = readout(datasigma, fname, mass[4], 2.48e-2*1e6, stateid, 7000, 0);
+    stateid++; 
+  }
+
+  //ups(1S) LHCb at 7 TeV (5 y bins)
+  for(int i = 0; i < 5; i++) {
+    fname = Form("LHCb_ups1_7_cs_y%d.txt", i+1);
+    fname = orig+fname;
+    ns[stateid] = readout(datasigma, fname, mass[4], 2.48e-2*1e3, stateid, 7000, 0);
+  stateid++; 
+  }
+    
 }

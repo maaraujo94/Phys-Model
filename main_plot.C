@@ -11,8 +11,6 @@ using namespace std;
 #include "aux_input.C"
 
 vector <vector <double> > datasigma(10);
-//psi', chi_c2, chi_c1, jpsi, ups(3S), ups(2S), ups(1S)
-float mass[7] = {3.686, 3.556, 3.511, 3.097, 10.355, 10.023, 9.460};
 
 void plot()
 {
@@ -20,9 +18,7 @@ void plot()
   
   ifstream file;
   ofstream tex;
-  const int nstates = 18;
   int ns[nstates] = {0}, counter = 0, ndf;
-  const int nparam = 32;
   double param[nparam], eparam[nparam], ptmmin = 0, minimum, chiprob;
 
   //////////////////////////////////
@@ -45,7 +41,7 @@ void plot()
   file >> ndf;
   chiprob = TMath::Prob(minimum, ndf);
 
-  char names[nparam][100] = {"L_{\\psi(2S)}","L_{\\chi_{c2}}","L_{\\chi_{c1}}","L_{J/\\psi}","L_{\\Upsilon(3S)}","L_{\\Upsilon(2S)}","L_{\\chi_{b2}}","L_{\\chi_{b1}}","L_{\\Upsilon(1S)}","A","\\beta","\\tau","\\rho","\\delta","b","c","d","e","BR_{ppdm}","BR_{ppjdp}","BR_{c2jpsi}","BR_{c1jpsi}","BR_{jpsidm}","BR_{b2ups1}","BR_{b1ups1}","BR_{ups3dm}","BR_{ups2dm}","BR_{ups1dm}","L_{CMS}","L_{ATLAS}","L_{ATLAS}(\\Upsilon)","L_{CMS}(13)"};
+  char names[nparam][100] = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "A", "\\beta", "\\tau", "\\rho", "\\delta", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "L_{CMS}", "L_{ATLAS}", "L_{LHCb}(\\psi)", "L_{LHCb}(\\Upsilon)"};
 
   //writing the fit parameters to a pretty tex file
   tex.open("plots/fitp.tex");
@@ -70,206 +66,146 @@ void plot()
   ///////////////////////////////
   //part: plotting data + pulls
   ///////////////////////////////
-  
-  //auxiliary functions storing plotting variables for all 14 plots
-  //psi', chic2, chic1, jpsi, ups3, ups2, ups1, psi'13, jpsi13, ups313, ups213, ups113, chicr(state->Lpos2), chibr(state->Lpos2)
-  const int nplots = 14;
-  int ndata[nplots] = {2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1};
-  int Lpos[nplots] = {0, 1, 2, 3, 4, 5, 8, 0, 3, 4, 5, 8, 1, 6};
-  int state[nplots] = {0, 1, 2, 3, 4, 5, 6, 0, 3, 4, 5, 6, 2, 7};
+
+  //auxiliary functions storing plotting variables for all plots
+  //jpsi,  ups1
+
+  const int nplots = 4;
+  int ndata[nplots] = {1, 5, 3, 5};
+  int Lpos[nplots] = {0, 0, 1, 1};
+  int state[nplots] = {0, 0, 4, 4};
   double mqq[nplots];
-  string savename[nplots] = {"psiprime", "chic2", "chic1", "jpsi", "ups3S", "ups2S", "ups1S", "psiprime_13", "jpsi_13", "ups3S_13", "ups2S_13", "ups1S_13", "chicr", "chibr"};
+  string savename[nplots] = {"jpsi_CA", "jpsi_LHCb", "ups1S_CA", "ups1S_LHCb"};
   for(int i = 0; i < nplots; i++) {
     mqq[i] = mass[state[i]];
-    //savename[i] = "plots/"+savename[i]+"_cs.pdf";
     savename[i] = "plots/"+savename[i];
   }
-  mqq[nplots-2] = mass[3];
-  mqq[nplots-1] = mass[6];
-
+  
   //xplot - plot number, dst - dataset number
   int xplot = 0, dst = 0;
-  double lumibr[2];
-  string legtitles[2];
-  int mkrStyle[2], len[2];
+  double lumibr[5];
+  string legtitles[5];
+  int mkrStyle[5], mkrCol[5], len[5], fplot[5] = {1, 1, 1, 1, 1};
   
-  //psiprime 7 TeV
+  //CMS+ATLAS jpsi 7 TeV
   //customizable options
-  lumibr[0] = param[28]*param[18];
-  lumibr[1] = param[29]*param[19]*param[22];
-  legtitles[0] = "CMS #psi(2S)";
-  legtitles[1] = "ATLAS #psi(2S)";
-  mkrStyle[0] = 20;
-  mkrStyle[1] = 25;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-  
-  //chic2 7 TeV
-  //customizable options
-  lumibr[0] = param[29]*param[20]*param[22];
-  legtitles[0] = "ATLAS #chi_{c2}";
-  mkrStyle[0] = 25;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-
-  //chic1 7 TeV
-  //customizable options
-  lumibr[0] = param[21]*param[22];
-  legtitles[0] = "ATLAS #chi_{c1}";
-  mkrStyle[0] = 25;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-  
-  //jpsi 7 TeV
-  //customizable options
-  lumibr[0] = param[28]*param[22];
+  lumibr[0] = param[11]*param[13];
   legtitles[0] = "CMS J/#psi";
   mkrStyle[0] = 20;
+  mkrCol[0] = kBlack;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, fplot, legtitles, savename[xplot]);
   dst+=ndata[xplot];
   xplot++;
 
-  //ups(3S) 7 TeV
-  //customizable options
-  lumibr[0] = param[28]*param[25];
-  lumibr[1] = param[25]*param[30];
-  legtitles[0] = "CMS #Upsilon(3S)";
-  legtitles[1] = "ATLAS #Upsilon(3S)";
-  mkrStyle[0] = 20;
-  mkrStyle[1] = 25;
+  //LHCb jpsi 7 TeV
+  for(int i = 0; i < 5; i++) {
+    lumibr[i] = param[15];
+    legtitles[i] = Form("LHCb J/#psi y%d", i+1);
+    mkrStyle[i] = 22;
+    mkrCol[i] = i+1;
+  }
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-
-  //ups(2S) 7 TeV
-  //customizable options
-  lumibr[0] = param[28]*param[26];
-  lumibr[1] = param[26]*param[30];
-  legtitles[0] = "CMS #Upsilon(2S)";
-  legtitles[1] = "ATLAS #Upsilon(2S)";
-  mkrStyle[0] = 20;
-  mkrStyle[1] = 25;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, fplot, legtitles, savename[xplot]);
   dst+=ndata[xplot];
   xplot++;
 
   //ups(1S) 7 TeV
   //customizable options
-  lumibr[0] = param[28]*param[27];
-  lumibr[1] = param[27]*param[30];
+  lumibr[0] = param[12]*param[13];
   legtitles[0] = "CMS #Upsilon(1S)";
-  legtitles[1] = "ATLAS #Upsilon(1S)";
   mkrStyle[0] = 20;
-  mkrStyle[1] = 25;
+  mkrCol[0] = kBlack;
+  for(int i = 0; i < 2; i++) {
+    lumibr[i+1] = param[12]*param[14];
+    legtitles[i+1] = Form("ATLAS #Upsilon(1S) y%d", i+1);
+    mkrStyle[i+1] = 25;
+    mkrCol[i+1] = i+1;
+  }
+  //fplot[2] = 1;
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, fplot, legtitles, savename[xplot]);
   dst+=ndata[xplot];
   xplot++;
-
-  //psiprime 13 TeV
-  //customizable options
-  lumibr[0] = param[31]*param[18];
-  legtitles[0] = "CMS #psi(2S)";
-  mkrStyle[0] = 20;
+  
+  for(int i = 0; i < 5; i++) {
+    lumibr[i] = param[12]*param[16];
+    legtitles[i] = Form("LHCb #Upsilon(1S) y%d", i+1);
+    mkrStyle[i] = 22;
+    mkrCol[i] = i+1;
+  }
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, fplot, legtitles, savename[xplot]);
   dst+=ndata[xplot];
   xplot++;
 
-  //jpsi 13 TeV
+  
+  /*const int nplots = 2;
+  int ndata[nplots] = {6, 8};
+  int Lpos[nplots] = {0, 1};
+  int state[nplots] = {0, 4};
+  double mqq[nplots];
+  string savename[nplots] = {"jpsi", "ups1S"};
+  for(int i = 0; i < nplots; i++) {
+    mqq[i] = mass[state[i]];
+    savename[i] = "plots/"+savename[i];
+  }
+  
+  //xplot - plot number, dst - dataset number
+  int xplot = 0, dst = 0;
+  double lumibr[8];
+  string legtitles[8];
+  int mkrStyle[8], mkrCol[8], len[8];
+  
+  //jpsi 7 TeV
   //customizable options
-  lumibr[0] = param[31]*param[22];
+  lumibr[0] = param[11]*param[13];
   legtitles[0] = "CMS J/#psi";
   mkrStyle[0] = 20;
+  mkrCol[0] = kBlack;
+  for(int i = 0; i < 5; i++) {
+    lumibr[i+1] = param[15];
+    legtitles[i+1] = Form("LHCb J/#psi y%d", i+1);
+    mkrStyle[i+1] = 22;
+    mkrCol[i+1] = i+1;
+  }
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, legtitles, savename[xplot]);
   dst+=ndata[xplot];
   xplot++;
 
-  //ups(3S) 13 TeV
+  //ups(1S) 7 TeV
   //customizable options
-  lumibr[0] = param[31]*param[25];
-  legtitles[0] = "CMS #Upsilon(3S)";
-  mkrStyle[0] = 20;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-
-  //ups(2S) 13 TeV
-  //customizable options
-  lumibr[0] = param[31]*param[26];
-  legtitles[0] = "CMS #Upsilon(2S)";
-  mkrStyle[0] = 20;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-
-  //ups(1S) 13 TeV
-  //customizable options
-  lumibr[0] = param[31]*param[27];
+  lumibr[0] = param[12]*param[13];
   legtitles[0] = "CMS #Upsilon(1S)";
   mkrStyle[0] = 20;
+  mkrCol[0] = kBlack;
+  for(int i = 0; i < 2; i++) {
+    lumibr[i+1] = param[12]*param[14];
+    legtitles[i+1] = Form("ATLAS #Upsilon(1S) y%d", i+1);
+    mkrStyle[i+1] = 25;
+    mkrCol[i+1] = i+1;
+  }
+  for(int i = 0; i < 5; i++) {
+    lumibr[i+3] = param[12]*param[16];
+    legtitles[i+3] = Form("LHCb #Upsilon(1S) y%d", i+1);
+    mkrStyle[i+3] = 22;
+    mkrCol[i+3] = i+1;
+  }
   //this structure is constant for all plots
   for(int j = 0; j < ndata[xplot]; j++)
     len[j] = ns[dst+j];
-  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
+  counter = csplotpull(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, ptmmin, minimum, ndf, chiprob, mkrStyle, mkrCol, legtitles, savename[xplot]);
   dst+=ndata[xplot];
-  xplot++;
-
-  //chic2 / chic1 ratio 7 TeV
-  //customizable options
-  lumibr[0] = param[20]/param[21];
-  legtitles[0] = "CMS #chi_{c2} / #chi_{c1}";
-  mkrStyle[0] = 20;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = rplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
-
-  //chib2 / chib1 ratio 7 TeV
-  //customizable options
-  lumibr[0] = param[23]/param[24];
-  legtitles[0] = "CMS #chi_{b2} / #chi_{b1}";
-  mkrStyle[0] = 20;
-  //this structure is constant for all plots
-  for(int j = 0; j < ndata[xplot]; j++)
-    len[j] = ns[dst+j];
-  counter = rplot(datasigma, counter, ndata[xplot], len, mqq[xplot], param, Lpos[xplot], state[xplot], lumibr, minimum, ndf, chiprob, mkrStyle, legtitles, savename[xplot]);
-  dst+=ndata[xplot];
-  xplot++;
+  xplot++;*/
 }
