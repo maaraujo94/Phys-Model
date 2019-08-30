@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#call shell command to run fit and then plot and obtain a pdf with all plots
+
+root -l <<EOF
+.L main_fit.C++
+fit();
+EOF
+
+root -l <<EOF
+.L main_plot.C++
+plot();
+EOF
+
+rm *.pcm
+rm *.d
+rm *.so
+
+cd plots
+echo 'now in plots directory'
+pdflatex plot.tex > res.txt
+rm res.txt
+cd ..
+
+evince plots/plot.pdf
