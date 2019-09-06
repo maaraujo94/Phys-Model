@@ -2,19 +2,12 @@
 
 #call shell command to run fit and then plot and obtain a pdf with all plots
 
-root -l <<EOF
-.L main_fit.C++
-fit();
-EOF
+echo 'do fit before plotting? (1) for yes, (0) for no'
+read doFit
+com="c_test.C($doFit)"
 
-root -l <<EOF
-.L main_plot.C++
-plot();
+root -l $com <<EOF
 EOF
-
-rm *.pcm
-rm *.d
-rm *.so
 
 cd plots
 echo 'now in plots directory'
@@ -22,4 +15,4 @@ pdflatex plot.tex > res.txt
 rm res.txt
 cd ..
 
-evince plots/plot.pdf
+evince plots/plot.pdf &
