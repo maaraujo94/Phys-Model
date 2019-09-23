@@ -94,14 +94,15 @@ double integf(double *par)
 
   //the dsigma/dt^star function already multiplied by sqrt(s^star)*p^star
   double fcos = (pow(en + p*cosa, -par[7]) + pow(en - p*cosa, -par[7])) * pow(1+eps-cosa*cosa, -par[8]) * pow(en, par[7]) / 2;
-  double fs;
-  if(abs(par[4]) < 1e-5)
-    fs = pow(p, par[6])*pow(s,-par[5]-par[6]/2);//pow(1+s/par[4], -par[5]-par[6]/2);
-  else
-    fs = pow(p, par[6])*pow(1+s/par[4], -par[5]-par[6]/2);
+  double fs = pow(p, par[6])*pow(s,-par[5]-par[6]/2);
+  //double fs = pow(p, 1)*pow(s,-1/2)*pow(par[1]*par[1],-par[5]);
+  //double fs = pow(p, 1)*pow(s,-1/2)*pow(1+par[1]*par[1],-par[5]);
+  //double fs = par[1]*pow(1+par[6]*par[1]*par[1], -par[5]/2);
+  
   double dsdt = fcos * fs;
-
-  return fx1 * fx2 * dsdt;
+  double jac = sqsm*s/p;
+  
+  return fx1 * fx2 * dsdt * jac;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
@@ -127,12 +128,16 @@ double sig(vector <double> par)
   double sNorm = sqsmNorm*sqsmNorm;
   
   double pNorm = (sNorm-1)/(2*sqsmNorm);
+  double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
   double fcosNorm = (pow(eNorm + pNorm*cosaNorm, -par[8]) + pow(eNorm - pNorm*cosaNorm, -par[8])) * pow(1+1e-5-cosaNorm*cosaNorm, -par[9]) * pow(eNorm, par[8]) / 2;
   double fsNorm = pow(pNorm, par[7])*pow(sNorm,-par[6]-par[7]/2);
+  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(ptNorm*ptNorm,-par[6]);
+  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(1+ptNorm*ptNorm,-par[6]);
+  //double fsNorm = ptNorm*pow(1+par[7]*ptNorm*ptNorm, -par[6]/2);
   double dsdtNorm = fcosNorm*fsNorm;
-  
+
   return sum/dsdtNorm;
 }
 
@@ -159,15 +164,18 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double A,
   double sNorm = sqsmNorm*sqsmNorm;
   
   double pNorm = (sNorm-1)/(2*sqsmNorm);
+  double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
   double fcosNorm = (pow(eNorm + pNorm*cosaNorm, -rho) + pow(eNorm - pNorm*cosaNorm, -rho)) * pow(1+1e-5-cosaNorm*cosaNorm, -delta) * pow(eNorm, rho) / 2;
   double fsNorm = pow(pNorm, tau)*pow(sNorm,-beta-tau/2);
+  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(ptNorm*ptNorm,-beta);
+  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(1+ptNorm*ptNorm,-beta);
+  // double fsNorm = ptNorm*pow(1+gamma*ptNorm*ptNorm, -beta/2);
+  
   double dsdtNorm = fcosNorm*fsNorm;
   
   return sum/dsdtNorm;
- 
-  return sum;
 }
 
 //calculates the average pT/M of a bin by weighing it with the model cs
