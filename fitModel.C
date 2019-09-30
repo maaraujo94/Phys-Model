@@ -371,6 +371,7 @@ public:
     }
     
     fit->ExecuteCommand("MIGRAD",0,0);
+    //fit->ExecuteCommand("MIGRAD",0,0);
 
     fitpar.resize(npartot);
     efitpar.resize(npartot);
@@ -611,6 +612,9 @@ public:
   
   //method that does the plotting
   void doPlot(const char* state_div) {
+    gROOT->SetBatch();
+
+    
     ifstream fin;
     ofstream tex;
     int nsets, nval;

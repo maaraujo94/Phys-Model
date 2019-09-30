@@ -12,8 +12,8 @@ norm LLHCb_Y1_y4 1 0
 shape A 0 1 1
 shape beta 2.5 0.25 0
 shape tau 1 0.25 1
-shape rho 2. 0.25 1
-shape delta 0 1 1
+shape rho 2 0.25 1
+shape delta 1 1 1
 shape b 1.8 0.1 1
 shape c 6 1. 1
 shape d 0 1 1
