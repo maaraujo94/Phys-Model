@@ -1,7 +1,6 @@
 #!/bin/sh
 
 #call shell command to run fit and then plot and obtain a pdf with all plots
-<<COMM
 echo "do fit before plotting? (1) for yes, (0) for no"
 read doFit
 com="c_test.C($doFit)"
@@ -15,9 +14,9 @@ rm res.txt
 cd ..
 
 evince plots/plot.pdf &
-COMM
-#call shell command to run fit over several values of a parameter
 
+#call shell command to run fit over several values of a parameter
+<<COMM
 #for file in b_*
 for file in c_*.txt
 do
@@ -35,4 +34,5 @@ do
 done
 
 echo "finished code"
+COMM
 

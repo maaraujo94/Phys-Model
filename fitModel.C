@@ -1,7 +1,7 @@
 //early declaraction of minuitFunction for the doFit call in the main class
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg);
 
-#import "aux_func_temp.C"
+#import "aux_func.C"
 
 // class to use for fitting and plotting
 class FitModel {
@@ -10,9 +10,10 @@ public:
   // states: number of states in the fit
   // chisquare, ndf: results of the fit
   // nparam: number of params of each type (norm, shape, nuis)
+  // len: length of sigpar vector
   // ptmmin: minimum pT/M to be included in the fit
   // PTMNORM: pT/M for normalization
-  int states, ndf;
+  int states, ndf, len;
   int nparam[3] = {0};
   double ptmmin = 2., PTMNORM = 4., chisquare;
   string fitresname = "fit.txt";
@@ -20,11 +21,6 @@ public:
   // auxiliary params for subdivisions of each y, pT bin
   int nmin = 3, nmax = 8, ny = 4, npt, nsteps;
   double dpt, dy, dn = (double)(nmax-nmin) / 39.;
-
-  // values for the normalization cross-section value (QMass can't be used yet)
-  double xinorm = PTMNORM, ssnorm = 7000, ynorm = 0, Mnorm = 3.097;
-  double normvals[5] = {ssnorm/Mnorm, xinorm, ynorm, 1., Mnorm};
-  int len;
 
   // maps between general state names and their masses and latex-formatted names
   map<string, double> QMass;
@@ -309,7 +305,7 @@ public:
     for(int i = 0; i < nparam[2]; i++) {
       chisq = ((par[i+nparam[0]+nparam[1]] - 1) / nuis[i].normunc) * ((par[i+nparam[0]+nparam[1]] - 1) / nuis[i].normunc);
       sum += chisq;
-      }
+    }
 
     return sum;
   }
@@ -522,7 +518,7 @@ public:
       
       // fit model can't be made as flexible regarding param number
       // TODO think a bit abt how (if?) this could be improved
-      f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])", ptmmin, 49.9);
+      f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13])", ptmmin, 49.9);
       f[i_set]->SetParameter(0, sigpar[0]);
       f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
       for(int j=2; j<len-1; j++)
@@ -613,14 +609,13 @@ public:
   //method that does the plotting
   void doPlot(const char* state_div) {
     gROOT->SetBatch();
-
     
     ifstream fin;
     ofstream tex;
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "A", "\\beta", "\\tau", "\\rho", "\\delta", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\gamma_1", "\\gamma_2", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");

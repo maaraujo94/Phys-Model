@@ -7,7 +7,7 @@
 // main function
 // argument determines whether we fit or open fit.txt and plot from there
 // called with > root -l 'c_test.C($tofit)'
-void c_test(bool tofit)
+void c_test(int tofit)
 {
   // only input element given in main: lists of datasets and of parameters for the fit, fit and plot instructions
   const char* input_list = "state_list.txt";
@@ -26,27 +26,21 @@ void c_test(bool tofit)
   fitclass.getParMethod(method_list);
 
   // either do the fit or just read fit results
-  if(tofit)  fitclass.doFit();
+  if(tofit == 1)  fitclass.doFit();
   else fitclass.readRes();
-  
-  fitclass.doPlot(plot_div);
 
-  cout << "Fit option given was " << tofit << ", therefore";
-  if(tofit) cout << " fit was performed" << endl;
-  else cout << " previous fit results were read for the plotting" << endl;
-
-  // testing normalization attribution
-  int nstates = fitclass.states;
-  double norm;
-  vector <double> fitpar = fitclass.fitpar;
-  int counter = 0;
-  for(int id = 0; id < nstates; id++) {
-    norm = 1;
-    for(int i = 0; i < fitclass.norm_att[id].size(); i++)
-      norm *= fitpar[fitclass.norm_att[id][i]];
-    cout << id << " " << fitclass.auxnames[1][id] << " " << fitclass.auxnames[0][id] << ": ybin " << fitclass.datasigma[1][counter] << "-" << fitclass.datasigma[2][counter] << ", norm = " << norm << endl;
-    counter+=fitclass.ns[id];
+  if(tofit!=2) fitclass.doPlot(plot_div);
+  else {
+    int npartot = fitclass.nparam[0]+fitclass.nparam[1]+fitclass.nparam[2];
+    double chipar[npartot];
+    for(int i = 0; i < npartot; i++)
+      chipar[i] = fitclass.fitpar[i];
+    fitclass.myFunction(chipar);
   }
   
+  cout << "Fit option given was " << tofit << ", therefore";
+  if(tofit) cout << " fit was performed" << endl;
+  else if(tofit == 0) cout << " previous fit results were read for the plotting" << endl;
+  else cout << "just called minimum functon" << endl;
   
 }

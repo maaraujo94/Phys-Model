@@ -76,7 +76,7 @@ double pdf(double x, double b, double c, double d, double e)
 }
 
 //the function to be integrated
-//par-> [0]: sqsfm, [1]: pTM, [2]: y, [3]: y4, [4]: A, [5]: beta, [6]: tau, [7]: rho, [8]: delta, [9]: b, [10]: c, [11]: d, [12]: e
+//par-> [0]: sqsfm, [1]: pTM, [2]: y, [3]: y4, [4]: beta, [5]: tau, [6]: rho, [7]: delta, [8]: gamma1, [9]: gamma2, [10]: b, [11]: c, [12]: d, [13]: e
 double integf(double *par)
 {
   double eps = 1e-5;
@@ -89,24 +89,28 @@ double integf(double *par)
   double x2 = sqsm/par[0] * exp( -0.5*(par[2]+par[3]) );
   double cosa = (sqrt( 1 + par[1]*par[1] ) * sinh(0.5*(par[2]-par[3]))) / p;
 
-  double fx1 = pdf(x1,par[9],par[10],par[11], par[12]);
-  double fx2 = pdf(x2,par[9],par[10],par[11], par[12]);
+  double fx1 = pdf(x1, par[10], par[11], par[12], par[13]);
+  double fx2 = pdf(x2, par[10], par[11], par[12], par[13]);
 
   //the dsigma/dt^star function already multiplied by sqrt(s^star)*p^star
-  double fcos = (pow(en + p*cosa, -par[7]) + pow(en - p*cosa, -par[7])) * pow(1+eps-cosa*cosa, -par[8]) * pow(en, par[7]) / 2;
-  double fs = pow(p, par[6])*pow(s,-par[5]-par[6]/2);
-  //double fs = pow(p, 1)*pow(s,-1/2)*pow(par[1]*par[1],-par[5]);
-  //double fs = pow(p, 1)*pow(s,-1/2)*pow(1+par[1]*par[1],-par[5]);
-  //double fs = par[1]*pow(1+par[6]*par[1]*par[1], -par[5]/2);
+  double Rho = par[6]*(1+par[6])/2.;
+  double fcos = 1 + par[7]*pow(abs(cosa), par[8]) + Rho*p*p/(en*en) * pow(abs(cosa), par[9]);
+  double fs = pow(p, par[5])*pow(s,-par[4]-par[5]/2);
   
   double dsdt = fcos * fs;
   double jac = sqsm*s/p;
+
+  ofstream fout;
+  fout.open("cosa_scan.txt", ofstream::app);
+  fout << par[1] << " " << par[2] << " " << par[3] << " " << cosa << " " << fx1 * fx2 * dsdt * jac << endl;
+  fout.close();
+  
   
   return fx1 * fx2 * dsdt * jac;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
-//par-> [0]: sqsfm, [1]: pT/M, [2]: y, [3]: L, [4]: M, [5]: A, [6]: beta, [7]: tau, [8]: rho, [9]: delta, [10]: b, [11]: c, [12]: d, [13]: e
+//par-> [0]: sqsfm, [1]: pT/M, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: tau, [7]: rho, [8]: delta, [9]: gamma1, [10]: gamma2, [11]: b, [12]: c, [13]: d, [14]: e
 double sig(vector <double> par)
 {
   double sum = 0;
@@ -115,8 +119,8 @@ double sig(vector <double> par)
   double fin = 26;
   double dy = 2*ylim/(fin-1.);
   double y4 = -ylim;
-  double pars[13]={par[0], par[1], par[2], y4, par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13]};
-
+  double pars[14]={par[0], par[1], par[2], y4, par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14]};
+  
   for(int i=0; i < fin; i++)
     {
       pars[3] = y4;
@@ -131,11 +135,10 @@ double sig(vector <double> par)
   double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
-  double fcosNorm = (pow(eNorm + pNorm*cosaNorm, -par[8]) + pow(eNorm - pNorm*cosaNorm, -par[8])) * pow(1+1e-5-cosaNorm*cosaNorm, -par[9]) * pow(eNorm, par[8]) / 2;
-  double fsNorm = pow(pNorm, par[7])*pow(sNorm,-par[6]-par[7]/2);
-  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(ptNorm*ptNorm,-par[6]);
-  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(1+ptNorm*ptNorm,-par[6]);
-  //double fsNorm = ptNorm*pow(1+par[7]*ptNorm*ptNorm, -par[6]/2);
+  double Rho = par[7]*(1+par[7])/2.;
+  double fcosNorm = 1 + par[8]*pow(abs(cosaNorm), par[9]) + Rho*pNorm*pNorm/(eNorm*eNorm) * pow(abs(cosaNorm), par[10]);
+  double fsNorm = pow(pNorm, par[6])*pow(sNorm,-par[5]-par[6]/2);
+
   double dsdtNorm = fcosNorm*fsNorm;
 
   return sum/dsdtNorm;
@@ -143,7 +146,7 @@ double sig(vector <double> par)
 
 //sigma function for plotting
 //takes params individually rather than through pointer 
-double sigplot(double sqsfm, double pTM, double y, double L, double M, double A, double beta, double tau, double rho, double delta, double b, double c, double d, double e)
+double sigplot(double sqsfm, double pTM, double y, double L, double M, double beta, double tau, double rho, double delta, double gamma1, double gamma2, double b, double c, double d, double e)
 {
   double sum = 0;
   
@@ -151,7 +154,7 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double A,
   double fin = 26;
   double dy = 2*ylim/(fin-1.);
   double y4 = -ylim;
-  double pars[13]={sqsfm, pTM, y, y4, A, beta, tau, rho, delta, b, c, d, e};
+  double pars[14]={sqsfm, pTM, y, y4, beta, tau, rho, delta, gamma1, gamma2, b, c, d, e};
   
   for(int i=0; i < fin; i++)
     {
@@ -167,11 +170,9 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double A,
   double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
-  double fcosNorm = (pow(eNorm + pNorm*cosaNorm, -rho) + pow(eNorm - pNorm*cosaNorm, -rho)) * pow(1+1e-5-cosaNorm*cosaNorm, -delta) * pow(eNorm, rho) / 2;
+  double Rho = rho*(1+rho)/2.;
+  double fcosNorm = 1 + delta*pow(abs(cosaNorm), gamma1) + Rho*pNorm*pNorm/(eNorm*eNorm) * pow(abs(cosaNorm), gamma2);
   double fsNorm = pow(pNorm, tau)*pow(sNorm,-beta-tau/2);
-  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(ptNorm*ptNorm,-beta);
-  //double fsNorm = pow(pNorm, 1)*pow(sNorm,-1/2)*pow(1+ptNorm*ptNorm,-beta);
-  // double fsNorm = ptNorm*pow(1+gamma*ptNorm*ptNorm, -beta/2);
   
   double dsdtNorm = fcosNorm*fsNorm;
   
