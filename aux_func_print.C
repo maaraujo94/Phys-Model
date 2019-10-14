@@ -101,9 +101,9 @@ double integf(double *par)
   double jac = sqsm*s/p;
 
   ofstream fout;
-  //fout.open("cosa_scan.txt", ofstream::app);
-  //fout << par[1] << " " << par[2] << " " << par[3] << " " << cosa << " " << fx1 * fx2 * dsdt * jac << endl;
-  //fout.close();
+  fout.open("cosa_scan.txt", ofstream::app);
+  fout << par[1] << " " << par[2] << " " << par[3] << " " << cosa << " " << fx1 * fx2 * dsdt * jac << endl;
+  fout.close();
   
   
   return fx1 * fx2 * dsdt * jac;

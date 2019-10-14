@@ -1,7 +1,7 @@
 //early declaraction of minuitFunction for the doFit call in the main class
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg);
 
-#import "aux_func.C"
+#import "aux_func_print.C"
 
 // class to use for fitting and plotting
 class FitModel {
@@ -289,7 +289,7 @@ public:
 	if(datasigma[3][n+counter] >= ptmmin) {
 	  //calculate cs prediction
 	  pred = csCalc(n+counter);
-	  
+
 	  //ratio will be !=1 if we consider polarization
 	  //lambda=0.;
 	  //ratio=(1+1./3*datasigma[4][i])/(1+(1-lambda)/(3+lambda)*datasigma[4][i]);
