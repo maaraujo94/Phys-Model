@@ -1,54 +1,74 @@
+/* code containing the class that does all the fit work
+ - store data, parameters, fit results
+ - run fit and plotting
+ also contains the minuitFunction wrapper for the fit call */
+
 //early declaraction of minuitFunction for the doFit call in the main class
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg);
 
 #import "aux_func.C"
 
 // class to use for fitting and plotting
+// everything is public for easier debugging
 class FitModel {
-  // maybe variables private once I'm done with the code I guess
 public:
-  // states: number of states in the fit
-  // chisquare, ndf: results of the fit
+  // PARAMETERS
+
+  // only used before the fit
+
+  // unc_method: the way to record cross-section uncertainty
+  // read_flag: whether to read datafile
+  // signorm: normalization applied on each dataset (y, BR effects)
+  // statename: stores input files
+  vector <int> unc_method;
+  vector <bool> read_flag;
+  vector <double> signorm;
+  vector <string> statename;
+
+  // determined pre-fit but used onwards
+
+  // n_states: number of states in the fit
   // nparam: number of params of each type (norm, shape, nuis)
-  // len: length of sigpar vector
-  // ptmmin: minimum pT/M to be included in the fit
-  // PTMNORM: pT/M for normalization
-  int states, ndf, len;
-  int nparam[3] = {0};
+  // n_pts: nr of data pts for each dataID
+  // *_att: norm and nuis params to be multiplied to get value for each dataID
+  // datasigma: storage of all (quantitative) info of each state
+  // auxnames: strings needed for legends and savenames
+  int n_states, nparam[3] = {0};
+  vector <int> n_pts;
+  vector <vector <int> > norm_att, nuis_att;
+  vector <vector <double> > datasigma;
+  vector <vector <string> > auxnames;
+
+  // determined on fitting step
+
+  // ndf: nr data points - nr free params
+  // ptmmin, PTMNORM: minimum pT/M of fit, normalization pT/M (OUTDATED!)
+  // chisquare: chi^2 of the fit
+  // fitresname: filename to store the fit results
+  // (e)fitpar: results of the fit (param +/- e_param)
+  // sigpar: pars in sig(pars)
+  int ndf;
   double ptmmin = 2., PTMNORM = 4., chisquare;
   string fitresname = "fit.txt";
-  
-  // auxiliary params for subdivisions of each y, pT bin
+  vector <double> fitpar, efitpar, sigpar;
+
+  // only used inside csCalc to define fitting bins
   int nmin = 3, nmax = 8, ny = 4, npt, nsteps;
   double dpt, dy, dn = (double)(nmax-nmin) / 39.;
+
+  // other quantities
 
   // maps between general state names and their masses and latex-formatted names
   map<string, double> QMass;
   map<string, string> QName;
-
-  // ns for nr of pts in each state
-  // method for the way to record cross-section uncertainty
-  // read to determine whether to read datafile
-  // *_att for the norms and nuis of each state
-  vector <int> ns, method, read;
-  vector <vector <int> > norm_att, nuis_att;
   
-  // (e)fitpar for the results of the fit, sigpar for the pars in sig(pars)
-  // signorm for the normalization applied on each dataset (y, BR effects)
-  // datasigma for storage of all (numerical) info of each state
-  vector <double> fitpar, efitpar, signorm, sigpar;
-  vector <vector <double> > datasigma;
-
-  // statename saves input files
-  // auxnames is for strings needed for legends and savenames
-  vector <string> statename;
-  vector <vector <string > > auxnames;
-
   // vectors of each class to define each type of fit param
   vector <NormPar> norm;
   vector <ShapePar> shape;
   vector <NuisPar> nuis;
 
+  // FUNCTIONS
+  
   // initializes the mass <-> state map
   void init() {
     const int nStates = 17;
@@ -74,13 +94,13 @@ public:
     fin.open(input_list);
     while(getline(fin, data)) iaux++;
 
-    // set size for statename and ns, fix number of states
+    // set size for statename and n_pts, fix number of states
     statename.resize(iaux, "");
-    ns.resize(iaux, 0);
-    read.resize(iaux, 0);
-    method.resize(iaux, 0);
+    n_pts.resize(iaux, 0);
+    read_flag.resize(iaux, false);
+    unc_method.resize(iaux, 0);
     signorm.resize(iaux, 1);
-    states = iaux;
+    n_states = iaux;
     
     // back to the start of the file
     fin.clear();
@@ -92,10 +112,10 @@ public:
       aux = parseString(aux[aux.size()-1], " ");
       iaux = stoi(aux[0]);    
 
-      if(data.find("#") == string::npos) read[iaux] = 1;
+      if(data.find("#") == string::npos) read_flag[iaux] = true;
 	
       statename[iaux] = aux[1];
-      method[iaux] = stoi(aux[2]);
+      unc_method[iaux] = stoi(aux[2]);
       aux = parseString(aux[3], "*");
       for(int i = 0; i < aux.size(); i++)
 	signorm[iaux] *= stof(aux[i]);
@@ -117,7 +137,7 @@ public:
     auxnames.resize(3);
     
     // read and input all datafiles from statename
-    for(int id = 0; id < states; id++) {
+    for(int id = 0; id < n_states; id++) {
       saux = parseString(statename[id], "/");
       saux = parseString(saux[saux.size()-1], "_");
 
@@ -127,7 +147,7 @@ public:
       auxnames[1].push_back(saux[1]);
       auxnames[2].push_back(parseString(saux[saux.size()-1], ".")[0]);
 
-      if(read[id] == 1) file.open(statename[id]);
+      if(read_flag[id]) file.open(statename[id]);
       if(file.is_open()) {
 	saux = parseString(statename[id], "/");
 	saux = parseString(saux[saux.size()-1], "_");
@@ -135,7 +155,7 @@ public:
 	sqrts = stof(saux[2])*1000;
 
 	// get nr of pts for each stateid
-	while(getline(file,data)) ns[id]+=1;
+	while(getline(file,data)) n_pts[id]+=1;
 	
 	file.clear();
 	file.seekg(0);
@@ -144,12 +164,12 @@ public:
 	/* [0] = mass, [1] = yi, [2] = yf, [3] = pT/M, [4] = pTi/M, [5] = pTf/M
 	   [6] = sigma*mass/norm, [7] = e(sigma), [8] = K(pol), [9] = sqrt(s)
 	   [10] = stateid 	 */
-	for(int j = 0; j < ns[id]; j++) {
+	for(int j = 0; j < n_pts[id]; j++) {
 	  for(int i = 0; i < 12; i++)
 	    file >> nums[i];
 	  
 	  // aux to correct unc: TODO should make the numbers here a variable to be read off somewhere
-	  if(method[id] == 1)
+	  if(unc_method[id] == 1)
 	    aux=nums[8]*nums[8]-1.8e-2*nums[5]*1.8e-2*nums[5];
 	  
 	  datasigma[0].push_back(mass);
@@ -161,11 +181,11 @@ public:
 	  datasigma[6].push_back(nums[5]*mass/signorm[id]);
 
 	  //three ways to register uncertainty (see method variable)
-	  if(method[id] == 0)
+	  if(unc_method[id] == 0)
 	    datasigma[7].push_back(sqrt(nums[6]*nums[6]+nums[8]*nums[8])*mass/signorm[id]);
-	  else if(method[id] == 1)
+	  else if(unc_method[id] == 1)
 	    datasigma[7].push_back(sqrt(nums[6]*nums[6]+aux)*mass/signorm[id]);
-	  else if(method[id] == 2)
+	  else if(unc_method[id] == 2)
 	    datasigma[7].push_back(sqrt(nums[6]*nums[6]*nums[5]*nums[5]+nums[8]*nums[8]*nums[5]*nums[5])*mass/(100*signorm[id]));
 
 	  datasigma[8].push_back(nums[10]/nums[11]-1);
@@ -215,13 +235,13 @@ public:
 
   // method to get which norm and nuis affect each state
   void getParMethod(const char* method_list) {
-    norm_att.resize(states);
-    nuis_att.resize(states);    
+    norm_att.resize(n_states);
+    nuis_att.resize(n_states);
     ifstream fin;
     int nnorm, nnuis, auxi;
     
     fin.open(method_list);
-    for(int id = 0; id < states; id++) {
+    for(int id = 0; id < n_states; id++) {
       fin >> auxi >> nnorm;
       norm_att[id].resize(nnorm);
       for(int n = 0; n < nnorm; n++)
@@ -257,7 +277,7 @@ public:
   // fit function
   double myFunction(double *par) {
     //first calculate const normalization
-    len = nparam[1] + 5;
+    int len = nparam[1] + 5;
     sigpar.resize(len);
 
     for(int i = 0; i < len; i++) {
@@ -269,7 +289,7 @@ public:
     int counter = 0;
 
     // run over all pts and get chisquare
-    for(int id = 0; id < states; id++) {
+    for(int id = 0; id < n_states; id++) {
       //for each state calculate norm factor (product of L terms)
       sigpar[3] = 1.;
       for(int i = 0; i < norm_att[id].size(); i++){
@@ -285,7 +305,7 @@ public:
       sigpar[4] = datasigma[0][counter];
 
       //cycle over each point in the state
-      for(int n = 0; n < ns[id]; n++)
+      for(int n = 0; n < n_pts[id]; n++)
 	if(datasigma[3][n+counter] >= ptmmin) {
 	  //calculate cs prediction
 	  pred = csCalc(n+counter);
@@ -298,7 +318,7 @@ public:
 	  chisq = ((pred - datasigma[6][n+counter]*ratio*lumibr)/(datasigma[7][n+counter]*ratio*lumibr))*((pred - datasigma[6][n+counter]*ratio*lumibr)/(datasigma[7][n+counter]*ratio*lumibr));
 	  sum += chisq;
 	}
-      counter += ns[id];
+      counter += n_pts[id];
     }
 
     // add factors for the nuisance parameters
@@ -337,13 +357,13 @@ public:
     // initialize normalizations
     int len_n[2] = {0};
     double L_est[nparam[0]];
-    for(int i = 0; i < 6; i++) len_n[0] += ns[i];
-    for(int i = 6; i < 14; i++) len_n[1] += ns[i];
+    for(int i = 0; i < 6; i++) len_n[0] += n_pts[i];
+    for(int i = 6; i < 14; i++) len_n[1] += n_pts[i];
     for(int i = 0; i < 2; i++) {
       L_est[i] = lest(aux_int, len_n[i]);
       aux_int += len_n[i];
     }
-    for(int i = 2; i < nparam[0]; i++) L_est[i] = 1;
+    for(int i = 2; i < nparam[0]; i++) L_est[i] = 1.;
 
     // initialize norm parameters
     for(int i = 0; i < nparam[0]; i++) {
@@ -427,7 +447,7 @@ public:
     fin.close();
 
     // resize sigpar and fill it appropriately
-    len = nparam[1] + 5;
+    int len = nparam[1] + 5;
     sigpar.resize(len);
 
     for(int i = 5; i < len; i++)
@@ -445,7 +465,7 @@ public:
     aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], posif);
     
     //get point of datasigma where current datasets start
-    for(int i = 0; i < sets[0]; i++) counter += ns[i];
+    for(int i = 0; i < sets[0]; i++) counter += n_pts[i];
     
     // plotting starts here
     TCanvas *c = new TCanvas("title", "name", 700, 700);
@@ -477,11 +497,11 @@ public:
       sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
       sigpar[4] = datasigma[0][counter];
       
-      float datapts[5][ns[id]];
-      float pullpts[2][ns[id]];
+      float datapts[5][n_pts[id]];
+      float pullpts[2][n_pts[id]];
       
       // cycle over all points of [id]-state, to plot data and later pulls
-      for(int j = 0; j < ns[id]; j++) {
+      for(int j = 0; j < n_pts[id]; j++) {
 	// filling arrays for data plotting
 	datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
 	datapts[1][j] = datasigma[6][j+counter]*lumibr;
@@ -498,7 +518,7 @@ public:
       mkrStyle = getStyle(auxnames[0][id]);
       
       // data plots defined and drawn
-      gd[i_set] = new TGraphAsymmErrors(ns[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
+      gd[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
       gd[i_set]->SetLineColor(i_set+1);
       gd[i_set]->SetMarkerColor(i_set+1);
       gd[i_set]->SetMarkerStyle(mkrStyle);
@@ -507,12 +527,12 @@ public:
 
       // pulls plots defined (but not drawn)
       // all pts below ptmmin aren't drawn
-      gp[i_set] = new TGraphAsymmErrors(ns[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
+      gp[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
       gp[i_set]->SetLineColor(i_set+1);
       gp[i_set]->SetMarkerColor(i_set+1);
       gp[i_set]->SetMarkerStyle(mkrStyle);
       gp[i_set]->SetMarkerSize(.75);
-      for(int i_data = 0; i_data < ns[id]; i_data++)
+      for(int i_data = 0; i_data < n_pts[id]; i_data++)
 	if(datapts[0][i_data] < ptmmin)
 	  gp[i_set]->RemovePoint(0);
       
@@ -520,13 +540,16 @@ public:
       // TODO think a bit abt how (if?) this could be improved
       f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13])", ptmmin, 49.9);
       f[i_set]->SetParameter(0, sigpar[0]);
-      f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-      for(int j=2; j<len-1; j++)
+      if(datasigma[1][counter] > 0)
+	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
+      else
+	f[i_set]->SetParameter(1, datasigma[2][counter]/2);
+      for(int j = 2; j < sigpar.size()-1; j++)
 	f[i_set]->SetParameter(j, sigpar[j+1]);
       f[i_set]->SetLineColor(i_set+1);
       f[i_set]->Draw("lsame");
 
-      counter += ns[id]; 
+      counter += n_pts[id];
     }
 
     // text on the plot
@@ -615,7 +638,7 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\gamma_1", "\\gamma_2", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "\\gamma", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -658,14 +681,15 @@ public:
 
       for(int i = 0; i < nsets; i++) {
 	fin >> sets[i];
-	nval += ns[sets[i]];
+	nval += n_pts[sets[i]];
       }
 
       // plot only if there are no points in dataset being considered
-      if(nval != 0) plotcanv(nsets, sets);
+      if(nval != 0)
+	plotcanv(nsets, sets);
 
       //break cycle when we get to the last dataset
-      if(sets[nsets-1] == states-1)
+      if(sets[nsets-1] == n_states-1)
 	break;
     }
     fin.close();

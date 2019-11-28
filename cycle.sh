@@ -1,12 +1,14 @@
 #!/bin/sh
 
-#call shell command to run fit and then plot and obtain a pdf with all plots
-<<COMM
-echo "do fit before plotting? (1) for yes, (0) for no"
-read doFit
-com="c_test.C($doFit)"
+# currently two different methods available to run fit
+# 1) fit, get plots, save everything in a folder "fit_res"
+# 2) using [par]_[val].txt files, fit over a cycle of values and save results
 
-root -l -q $com 
+# 1) call shell command to fit, get plots, then save everything in a folder
+echo "doing fit before plotting"
+com="c_test.C(1)"
+
+root -l -q $com > log_root
 
 cd plots
 echo "now in plots directory"
@@ -14,13 +16,17 @@ pdflatex plot.tex > res.txt
 rm res.txt
 cd ..
 
-evince plots/plot.pdf &
-COMM
+rm -r fit_res
+mkdir fit_res
 
-#call shell command to run fit over several values of a parameter
+cp fit.txt fit_res/
+cp -r plots fit_res/
+cp log_root fit_res/
+
+# 2) call shell command to run fit over several values of a parameter
 <<COMM
-#for file in b_*
-for file in c_*.txt
+mkdir parscan
+for file in l_*.txt
 do
     echo "now doing file $file"
     cp $file param_list.txt	    
@@ -30,27 +36,15 @@ do
     pdflatex plot.tex > res.txt
     rm res.txt
     cd ..
-    cp log_root parscan/log_$file
-    cp fit.txt parscan/fit_$file
-    cp -r plots parscan/plots_$file
+    echo "storing cosalpha"
+    root -l -q "c_test_print.C"
+
+    mkdir parscan/fit_res_$file
+    mv fit.txt parscan/fit_res_$file/
+    mv log_root parscan/fit_res_$file/
+    mv cosa_scan.txt parscan/fit_res_$file/
+    cp -r plots parscan/fit_res_$file/
 done
 
 echo "finished code"
 COMM
-
-#do fit then run over minimum func again just for saving results
-echo "running first for fit result"
-com="c_test.C(1)"
-    
-root -l -q $com > log_root_$add
-
-cd plots
-echo "now in plots directory"
-pdflatex plot.tex > res.txt
-rm res.txt
-cd ..
-
-echo "running just minimum to store results"
-com="c_test_print.C(2)"
-
-root -l -q $com

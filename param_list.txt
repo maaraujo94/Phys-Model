@@ -1,27 +1,27 @@
-norm Ljpsi 1 0
-norm Lups1 100 0
-norm LLHCb_psi_y1 1 0
-norm LLHCb_psi_y2 1 0
-norm LLHCb_psi_y3 1 0
-norm LLHCb_psi_y4 1 0
-norm LLHCb_psi_y5 1 0
-norm LLHCb_Y1_y1 1 0
-norm LLHCb_Y1_y2 1 0
-norm LLHCb_Y1_y3 1 0
-norm LLHCb_Y1_y4 1 0
-shape beta 2.0 0.1 0
+norm Ljpsi 1e-3 0
+norm Lups1 1 0
+norm LLHCb_psi_y1 1 1
+norm LLHCb_psi_y2 1 1
+norm LLHCb_psi_y3 1 1
+norm LLHCb_psi_y4 1 1
+norm LLHCb_psi_y5 1 1
+norm LLHCb_Y1_y1 1 1
+norm LLHCb_Y1_y2 1 1
+norm LLHCb_Y1_y3 1 1
+norm LLHCb_Y1_y4 1 1
+shape beta 2. 0.25 0
 shape tau 1 0.25 1
-shape rho 2 0.25 1
-shape delta 1 1 1
-shape gamma1 2 0.1 1
-shape gamma2 2 0.1 1
+shape rho 2. 0.25 0
+shape delta 1.0 1 1
+shape lambda 0 0.5 1
+shape gamma 2 0.1 1
 shape b 1.8 0.1 1
-shape c 6 1. 1
+shape c 6 0.1 0
 shape d 0 1 1
 shape e 0 1 1
 nuis br_jpsi_dm 0.033/5.961 1
-nuis br_ups1_dm 0.05/2.48 1
+nuis br_ups1_dm 0.05/2.48 0
 nuis L_CMS 2.2e-2 1
 nuis L_ATLAS 3.9e-2 1
-nuis L_LHCb_psi 3.5e-2 1
-nuis L_LHCb_ups 1.7e-2 1
+nuis L_LHCb_psi 3.5e-2 0
+nuis L_LHCb_ups 1.7e-2 0

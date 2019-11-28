@@ -2,14 +2,15 @@
  - read options
  - get input
  - perform fit (optional)
- - save results and plot fits */
+ - plot and save results
+ "print" means it's the version used to store the cosalpha distribution */
 
-#import "fitModel.C"
+#import "fitModel_print.C"
 
 // main function
-// argument determines whether we fit or simply open fit.txt and plot from there
-// called with > root -l 'c_test.C($tofit)'
-void c_test(int tofit)
+// reads fit result, calls minimum() and stores cosa values scanned
+// called with > root -l c_test_print.C
+void c_test_print()
 {
   // only input element given in main: lists of datasets and of parameters for the fit, fit and plot instructions
   const char* input_list = "state_list.txt";
@@ -27,14 +28,15 @@ void c_test(int tofit)
   fitclass.getParams(param_list);
   fitclass.getParMethod(method_list);
 
-  // either do the fit or just read fit results
-  if(tofit == 1)  fitclass.doFit();
-  else fitclass.readRes();
+  // read fit results
+  fitclass.readRes();
 
-  // plot fit results
-  fitclass.doPlot(plot_div);
+  // call minimum once to store cosalpha
+  int npartot = fitclass.nparam[0]+fitclass.nparam[1]+fitclass.nparam[2];
+  double chipar[npartot];
+  for(int i = 0; i < npartot; i++)
+    chipar[i] = fitclass.fitpar[i];
+  fitclass.myFunction(chipar);
   
-  cout << "Fit option given was " << tofit << ", therefore";
-  if(tofit == 1) cout << " fit was performed" << endl;
-  else if(tofit == 0) cout << " previous fit results were read for the plotting" << endl;
+  cout << "c_test_print: called minimum function" << endl;
 }

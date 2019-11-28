@@ -1,3 +1,9 @@
+/* auxiliary macro with all the functions that are independent of the fit class
+ - aux classes for param types, string parser, style functions
+ - all functions that make up the cross-section model used
+"print" means it's the version used to store the cosalpha distribution */
+
+
 #include "TCanvas.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
@@ -16,6 +22,7 @@
 #include <iostream>
 using namespace std;
 
+// normalization point (sqrt(s^hat)/M, cosalpha)*
 double sqsmNorm = 9.;
 double cosaNorm = 0.;
 
@@ -76,7 +83,7 @@ double pdf(double x, double b, double c, double d, double e)
 }
 
 //the function to be integrated
-//par-> [0]: sqsfm, [1]: pTM, [2]: y, [3]: y4, [4]: beta, [5]: tau, [6]: rho, [7]: delta, [8]: gamma1, [9]: gamma2, [10]: b, [11]: c, [12]: d, [13]: e
+//par-> [0]: sqsfm, [1]: pTM, [2]: y, [3]: y4, [4]: beta, [5]: tau, [6]: rho, [7]: delta, [8]: lambda, [9]: gamma, [10]: b, [11]: c, [12]: d, [13]: e
 double integf(double *par)
 {
   double eps = 1e-5;
@@ -93,24 +100,24 @@ double integf(double *par)
   double fx2 = pdf(x2, par[10], par[11], par[12], par[13]);
 
   //the dsigma/dt^star function already multiplied by sqrt(s^star)*p^star
-  double Rho = par[6]*(1+par[6])/2.;
-  double fcos = 1 + par[7]*pow(abs(cosa), par[8]) + Rho*p*p/(en*en) * pow(abs(cosa), par[9]);
-  double fs = pow(p, par[5])*pow(s,-par[4]-par[5]/2);
-  
-  double dsdt = fcos * fs;
+  double gfunc = (pow(en + p*cosa, -par[6]) + pow(en - p*cosa, -par[6])) * pow(1+eps-cosa*cosa, -par[7]) * pow(en, par[6]) / 2.;
+  double hfunc = pow(p, par[5])*pow(s,-par[4]-par[5]/2.);
+  double emp = 1. + par[8]*cosa*cosa;
+
+  double dsdt = gfunc * emp * hfunc;
   double jac = sqsm*s/p;
 
+  // part of "print" version that stores cosalpha
   ofstream fout;
   fout.open("cosa_scan.txt", ofstream::app);
   fout << par[1] << " " << par[2] << " " << par[3] << " " << cosa << " " << fx1 * fx2 * dsdt * jac << endl;
   fout.close();
   
-  
   return fx1 * fx2 * dsdt * jac;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
-//par-> [0]: sqsfm, [1]: pT/M, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: tau, [7]: rho, [8]: delta, [9]: gamma1, [10]: gamma2, [11]: b, [12]: c, [13]: d, [14]: e
+//par-> [0]: sqsfm, [1]: pT/M, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: tau, [7]: rho, [8]: delta, [9]: lambda, [10]: gamma, [11]: b, [12]: c, [13]: d, [14]: e
 double sig(vector <double> par)
 {
   double sum = 0;
@@ -120,7 +127,7 @@ double sig(vector <double> par)
   double dy = 2*ylim/(fin-1.);
   double y4 = -ylim;
   double pars[14]={par[0], par[1], par[2], y4, par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14]};
-  
+
   for(int i=0; i < fin; i++)
     {
       pars[3] = y4;
@@ -130,23 +137,24 @@ double sig(vector <double> par)
  
   //get the normalization value
   double sNorm = sqsmNorm*sqsmNorm;
+  double eps = 1e-5;
   
   double pNorm = (sNorm-1)/(2*sqsmNorm);
   double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
-  double Rho = par[7]*(1+par[7])/2.;
-  double fcosNorm = 1 + par[8]*pow(abs(cosaNorm), par[9]) + Rho*pNorm*pNorm/(eNorm*eNorm) * pow(abs(cosaNorm), par[10]);
-  double fsNorm = pow(pNorm, par[6])*pow(sNorm,-par[5]-par[6]/2);
+  double gfNorm = (pow(eNorm + pNorm*cosaNorm, -par[7]) + pow(eNorm - pNorm*cosaNorm, -par[7])) * pow(1+eps-cosaNorm*cosaNorm, -par[8]) * pow(eNorm, par[7]) / 2;
+  double hfNorm = pow(pNorm, par[6])*pow(sNorm,-par[5]-par[6]/2);
+  double emp = 1 + par[9]*cosaNorm*cosaNorm;
 
-  double dsdtNorm = fcosNorm*fsNorm;
+  double dsdtNorm = gfNorm * emp * hfNorm;
 
   return sum/dsdtNorm;
 }
 
 //sigma function for plotting
 //takes params individually rather than through pointer 
-double sigplot(double sqsfm, double pTM, double y, double L, double M, double beta, double tau, double rho, double delta, double gamma1, double gamma2, double b, double c, double d, double e)
+double sigplot(double sqsfm, double pTM, double y, double L, double M, double beta, double tau, double rho, double delta, double lambda, double gamma, double b, double c, double d, double e)
 {
   double sum = 0;
   
@@ -154,7 +162,7 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double be
   double fin = 26;
   double dy = 2*ylim/(fin-1.);
   double y4 = -ylim;
-  double pars[14]={sqsfm, pTM, y, y4, beta, tau, rho, delta, gamma1, gamma2, b, c, d, e};
+  double pars[14]={sqsfm, pTM, y, y4, beta, tau, rho, delta, lambda, gamma, b, c, d, e};
   
   for(int i=0; i < fin; i++)
     {
@@ -165,16 +173,17 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double be
 
   //get the normalization value
   double sNorm = sqsmNorm*sqsmNorm;
+  double eps = 1e-5;
   
   double pNorm = (sNorm-1)/(2*sqsmNorm);
   double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);
 
-  double Rho = rho*(1+rho)/2.;
-  double fcosNorm = 1 + delta*pow(abs(cosaNorm), gamma1) + Rho*pNorm*pNorm/(eNorm*eNorm) * pow(abs(cosaNorm), gamma2);
-  double fsNorm = pow(pNorm, tau)*pow(sNorm,-beta-tau/2);
+  double gfNorm = (pow(eNorm + pNorm*cosaNorm, -rho) + pow(eNorm - pNorm*cosaNorm, -rho)) * pow(1+eps-cosaNorm*cosaNorm, -delta) * pow(eNorm, rho) / 2;
+  double hfNorm = pow(pNorm, tau)*pow(sNorm,-beta-tau/2);
+  double emp = 1 + lambda*cosaNorm*cosaNorm;
   
-  double dsdtNorm = fcosNorm*fsNorm;
+  double dsdtNorm = gfNorm * emp * hfNorm;
   
   return sum/dsdtNorm;
 }
@@ -197,6 +206,7 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
   return uint / lint;
 }
 
+// define marker style from data "experiment" label
 int getStyle(string det) {
   if(det == "CMS") return 20;
   if(det == "ATLAS") return 25;
@@ -204,6 +214,7 @@ int getStyle(string det) {
   else return 1;
 }
 
+// define plot range depending on data label
 void aRange(string det, string state, double *apos) {
   apos[0] = -1;
   apos[3] = 9.99e3;

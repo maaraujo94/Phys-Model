@@ -14,7 +14,13 @@ Defines the class containing all necessary variables and methods for the fit wor
 3) aux_func_temp
 Contains auxiliary functions for fitting and plotting which don't depend on the full datasigma vector
 
-WORKFLOW: run c_test(doFit), with doFit = 1 for fitting and doFit = 0 for just plotting
+4) cycle.sh
+runs c_test(doFit), with doFit = 1 for fitting and doFit = 0 for just plotting (taken as input), then compiles latex file of plots and saves fit results in a folder
+can also run a cycle of fits over several different param_list.txt files
+
+5) param_cycle.py
+runs over a cycle of [parameter] values defined internally and produces a "param_list.txt"-like file with [parameter] taking a different value for each
 
 THINGS TO CHANGE
 - shape part of the fit function still not very flexible. Devote some time to considering how to further improve this, might not be possible
+- replace PTMNORM by a method that more accurately gives first prediction for L_QQ values
