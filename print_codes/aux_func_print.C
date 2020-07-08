@@ -1,9 +1,9 @@
 /* auxiliary macro with all the functions that are independent of the fit class
  - aux classes for param types, string parser, style functions
  - all functions that make up the cross-section model used
-"print" means it's the version used to store the cosalpha distribution */
+"print" means its the version used to store the cosalpha distribution */
 
-
+#include "LHAPDF/LHAPDF.h"
 #include "TCanvas.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
@@ -20,11 +20,15 @@
 #include "TMath.h"
 #include <fstream>
 #include <iostream>
+
+using namespace LHAPDF;
 using namespace std;
 
 // normalization point (sqrt(s^hat)/M, cosalpha)*
 double sqsmNorm = 9.;
 double cosaNorm = 0.;
+
+PDF *pdf_ct = mkPDF("CT14nnlo", 0);
 
 // function to parse a string into components separated by "deli"
 vector< string > parseString( string line, string deli) {
@@ -74,12 +78,17 @@ public:
   }
 };
 
-//the parametrization of the pdf function
-double pdf(double x, double b, double c, double d, double e)
+//the parametrization of the pdf function with LHAPDF NNLO_CTEQ14 
+double pdf(double x, double q2)
 {
   if (x>1)
     return 0;
-  return pow(x, -b) * pow(1-x, c) * (1 + d*sqrt(x) + e*x);
+  return pdf_ct->xfxQ2(21, x, q2) / x;
+}
+
+double alpha(double q2)
+{
+  return pdf_ct->alphasQ2(q2);
 }
 
 //the function to be integrated
@@ -94,26 +103,28 @@ double integf(double *par)
   double en = (s+1) / (2*sqsm);
   double x1 = sqsm/par[0] * exp( 0.5*(par[2]+par[3]) );
   double x2 = sqsm/par[0] * exp( -0.5*(par[2]+par[3]) );
+
   double cosa = (sqrt( 1 + par[1]*par[1] ) * sinh(0.5*(par[2]-par[3]))) / p;
 
-  double fx1 = pdf(x1, par[10], par[11], par[12], par[13]);
-  double fx2 = pdf(x2, par[10], par[11], par[12], par[13]);
+  double fx1 = pdf(x1, s);
+  double fx2 = pdf(x2, s);
 
-  //the dsigma/dt^star function already multiplied by sqrt(s^star)*p^star
+  //the dsigma/dt^star function multiplied by jacobian sqrt(s^star)*p^star
   double gfunc = (pow(en + p*cosa, -par[6]) + pow(en - p*cosa, -par[6])) * pow(1+eps-cosa*cosa, -par[7]) * pow(en, par[6]) / 2.;
   double hfunc = pow(p, par[5])*pow(s,-par[4]-par[5]/2.);
   double emp = 1. + par[8]*cosa*cosa;
 
   double dsdt = gfunc * emp * hfunc;
   double jac = sqsm*s/p;
+  double alpha_pow = pow(alpha(s), par[9]);
 
   // part of "print" version that stores cosalpha
   ofstream fout;
   fout.open("cosa_scan.txt", ofstream::app);
   fout << par[1] << " " << par[2] << " " << par[3] << " " << cosa << " " << fx1 * fx2 * dsdt * jac << endl;
   fout.close();
-  
-  return fx1 * fx2 * dsdt * jac;
+
+  return fx1 * fx2 * dsdt * jac * alpha_pow;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
@@ -127,7 +138,7 @@ double sig(vector <double> par)
   double dy = 2*ylim/(fin-1.);
   double y4 = -ylim;
   double pars[14]={par[0], par[1], par[2], y4, par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14]};
-
+  
   for(int i=0; i < fin; i++)
     {
       pars[3] = y4;
@@ -138,7 +149,7 @@ double sig(vector <double> par)
   //get the normalization value
   double sNorm = sqsmNorm*sqsmNorm;
   double eps = 1e-5;
-  
+
   double pNorm = (sNorm-1)/(2*sqsmNorm);
   double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
   double eNorm = (sNorm+1)/(2*sqsmNorm);

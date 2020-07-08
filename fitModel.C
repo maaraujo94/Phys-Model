@@ -453,6 +453,75 @@ public:
     for(int i = 5; i < len; i++)
       sigpar[i] = fitpar[i-5+nparam[0]];
   }
+
+  void plotempty(int nsets, int *sets) {
+    string savename;
+
+    double posif[4];
+    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], posif);
+
+    vector <string> saux = parseString(statename[sets[0]], "/");
+    saux = parseString(saux[saux.size()-1], "_");
+    double sqrts = stof(saux[2]);
+   
+    TCanvas *c = new TCanvas("title", "name", 700, 700);
+    c->SetLogy();
+    TH1F *fc = c->DrawFrame(posif[0], posif[1], posif[2], posif[3]);
+    fc->SetXTitle("p_{T}/M");
+    fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
+    fc->GetYaxis()->SetTitleOffset(1);
+    c->Modified();
+    c->SetTitle("");
+
+    // text on the plot
+    TLatex lc;
+    double xpos = getPos(posif[0], posif[2], 0.625, 0);
+    lc.SetTextSize(0.03);
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    xpos = getPos(posif[0], posif[2], 1./20, 0);
+    lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
+    
+    savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs.pdf";
+    const char *st = savename.c_str();
+    c->SaveAs(st);
+
+    // redo plotting for pulls
+    c->Clear();
+    c->SetLogy(0);
+
+    TH1F *fp = c->DrawFrame(posif[0], -10, posif[2], 10);
+    fp->SetXTitle("p_{T}/M");
+    fp->SetYTitle("pulls");
+    fp->GetYaxis()->SetTitleOffset(1);
+    c->Modified();
+    c->SetTitle("");
+   
+    //plot line at zero
+    TF1 *zero = new TF1("zero", "0", posif[0], posif[2]);
+    zero->SetLineColor(kBlue);
+    zero->SetLineStyle(7);
+    zero->Draw("lsame");
+
+    // plot pt/M cutoff
+    TLine *ptm = new TLine(ptmmin, -10, ptmmin, 10);
+    ptm->SetLineStyle(7);
+    ptm->Draw("lsame");
+
+    //text on the plot
+    TLatex lp;
+    lp.SetTextSize(0.03);
+    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lp.DrawLatex(xpos, getPos(-10, 10, 1./20, 0), Form("pp %.0f TeV", sqrts));
+    
+    // save pulls plots
+    savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
+    const char* savep = savename.c_str();
+    c->SaveAs(savep);
+    
+    c->Destructor();
+  }
   
   //method that plots everything in each canvas
   void plotcanv(int nsets, int *sets) {
@@ -485,73 +554,75 @@ public:
     //cycle over all states
     for(int i_set = 0; i_set < nsets; i_set++) {
       id = sets[i_set];
-      // get normalization and lumi*br factors
-      sigpar[3] = 1.;
-      for(int i = 0; i < norm_att[id].size(); i++)
-	sigpar[3] *= fitpar[norm_att[id][i]];
-      lumibr = 1.;
-      for(int i = 0; i < nuis_att[id].size(); i++)
-	lumibr *= fitpar[nuis_att[id][i]+nparam[0]+nparam[1]];
+      if(n_pts[id] > 0) {
+	// get normalization and lumi*br factors
+	sigpar[3] = 1.;
+	for(int i = 0; i < norm_att[id].size(); i++)
+	  sigpar[3] *= fitpar[norm_att[id][i]];
+	lumibr = 1.;
+	for(int i = 0; i < nuis_att[id].size(); i++)
+	  lumibr *= fitpar[nuis_att[id][i]+nparam[0]+nparam[1]];
 
-      // get sqrt(s) / M and MQQ
-      sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
-      sigpar[4] = datasigma[0][counter];
-      
-      float datapts[5][n_pts[id]];
-      float pullpts[2][n_pts[id]];
-      
-      // cycle over all points of [id]-state, to plot data and later pulls
-      for(int j = 0; j < n_pts[id]; j++) {
-	// filling arrays for data plotting
-	datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
-	datapts[1][j] = datasigma[6][j+counter]*lumibr;
-	datapts[2][j] = datasigma[7][j+counter]*lumibr;
-	datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
-	datapts[4][j] = datasigma[5][j+counter] - datapts[0][j];
-
-	// filling arrays for pulls plotting
-	cs = csCalc(j+counter);
-	pullpts[0][j] = (datapts[1][j] - cs) / datapts[2][j];
-	pullpts[1][j] = 0.;
+	// get sqrt(s) / M and MQQ
+	sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
+	sigpar[4] = datasigma[0][counter];
+	
+	float datapts[5][n_pts[id]];
+	float pullpts[2][n_pts[id]];
+	
+	// cycle over all points of [id]-state, to plot data and later pulls
+	for(int j = 0; j < n_pts[id]; j++) {
+	  // filling arrays for data plotting
+	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
+	  datapts[1][j] = datasigma[6][j+counter]*lumibr;
+	  datapts[2][j] = datasigma[7][j+counter]*lumibr;
+	  datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
+	  datapts[4][j] = datasigma[5][j+counter] - datapts[0][j];
+	  
+	  // filling arrays for pulls plotting
+	  cs = csCalc(j+counter);
+	  pullpts[0][j] = (datapts[1][j] - cs) / datapts[2][j];
+	  pullpts[1][j] = 0.;
+	}
+	
+	mkrStyle = getStyle(auxnames[0][id]);
+	
+	// data plots defined and drawn
+	gd[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
+	gd[i_set]->SetLineColor(i_set+1);
+	gd[i_set]->SetMarkerColor(i_set+1);
+	gd[i_set]->SetMarkerStyle(mkrStyle);
+	gd[i_set]->SetMarkerSize(.75);
+	gd[i_set]->Draw("P");
+	
+	// pulls plots defined (but not drawn)
+	// all pts below ptmmin aren't drawn
+	gp[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
+	gp[i_set]->SetLineColor(i_set+1);
+	gp[i_set]->SetMarkerColor(i_set+1);
+	gp[i_set]->SetMarkerStyle(mkrStyle);
+	gp[i_set]->SetMarkerSize(.75);
+	for(int i_data = 0; i_data < n_pts[id]; i_data++)
+	  if(datapts[0][i_data] < ptmmin)
+	    gp[i_set]->RemovePoint(0);
+	
+	// fit model can't be made as flexible regarding param number
+	// TODO think a bit abt how (if?) this could be improved
+	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13])", ptmmin, 49.9);
+	f[i_set]->SetParameter(0, sigpar[0]);
+	if(datasigma[1][counter] > 0)
+	  f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
+	else
+	  f[i_set]->SetParameter(1, datasigma[2][counter]/2);
+	for(int j = 2; j < sigpar.size()-1; j++)
+	  f[i_set]->SetParameter(j, sigpar[j+1]);
+	f[i_set]->SetLineColor(i_set+1);
+	f[i_set]->Draw("lsame");
+	
+	counter += n_pts[id];
       }
-
-      mkrStyle = getStyle(auxnames[0][id]);
-      
-      // data plots defined and drawn
-      gd[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
-      gd[i_set]->SetLineColor(i_set+1);
-      gd[i_set]->SetMarkerColor(i_set+1);
-      gd[i_set]->SetMarkerStyle(mkrStyle);
-      gd[i_set]->SetMarkerSize(.75);
-      gd[i_set]->Draw("P");
-
-      // pulls plots defined (but not drawn)
-      // all pts below ptmmin aren't drawn
-      gp[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
-      gp[i_set]->SetLineColor(i_set+1);
-      gp[i_set]->SetMarkerColor(i_set+1);
-      gp[i_set]->SetMarkerStyle(mkrStyle);
-      gp[i_set]->SetMarkerSize(.75);
-      for(int i_data = 0; i_data < n_pts[id]; i_data++)
-	if(datapts[0][i_data] < ptmmin)
-	  gp[i_set]->RemovePoint(0);
-      
-      // fit model can't be made as flexible regarding param number
-      // TODO think a bit abt how (if?) this could be improved
-      f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13])", ptmmin, 49.9);
-      f[i_set]->SetParameter(0, sigpar[0]);
-      if(datasigma[1][counter] > 0)
-	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-      else
-	f[i_set]->SetParameter(1, datasigma[2][counter]/2);
-      for(int j = 2; j < sigpar.size()-1; j++)
-	f[i_set]->SetParameter(j, sigpar[j+1]);
-      f[i_set]->SetLineColor(i_set+1);
-      f[i_set]->Draw("lsame");
-
-      counter += n_pts[id];
     }
-
+    
     // text on the plot
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 0.625, 0);
@@ -560,34 +631,35 @@ public:
     lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-
+    
     // draw legend
     double endpt = 0.85 - (double)nsets*0.05;  
     TLegend *leg = new TLegend(0.6, endpt, 0.9, 0.9);
     leg->SetTextSize(0.03);
-    for(int i = 0; i < nsets; i++)  {
-      savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
-      const char *st = savename.c_str();
-      leg->AddEntry(gd[i], st, "p");
-    }
+    for(int i = 0; i < nsets; i++)  
+      if (n_pts[sets[i]] > 0) {
+	savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
+	const char *st = savename.c_str();
+	leg->AddEntry(gd[i], st, "p");
+      }
     leg->Draw();
-      
+    
     // save data plot
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs.pdf";
     const char *st = savename.c_str();
     c->SaveAs(st);
-
+    
     // redo plotting for pulls
     c->Clear();
     c->SetLogy(0);
-
+    
     TH1F *fp = c->DrawFrame(posif[0], -10, posif[2], 10);
     fp->SetXTitle("p_{T}/M");
     fp->SetYTitle("pulls");
     fp->GetYaxis()->SetTitleOffset(1);
     c->Modified();
     c->SetTitle("");
-   
+    
     //plot line at zero
     TF1 *zero = new TF1("zero", "0", posif[0], posif[2]);
     zero->SetLineColor(kBlue);
@@ -601,7 +673,8 @@ public:
   
     //draw pulls
     for(int i = 0; i < nsets; i++) {
-      gp[i]->Draw("P"); 
+      if( n_pts[sets[i]] > 0)
+	gp[i]->Draw("P"); 
     }
 
     //text on the plot
@@ -614,11 +687,12 @@ public:
     //draw legend
     TLegend *legp = new TLegend(0.6, endpt, 0.9, 0.9);
     legp->SetTextSize(0.03);
-    for(int i = 0; i < nsets; i++)  {
-      savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
-      const char *st = savename.c_str();
-      legp->AddEntry(gp[i], st, "p");
-    }
+    for(int i = 0; i < nsets; i++)
+      if (n_pts[sets[i]] > 0) {
+	savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
+	const char *st = savename.c_str();
+	legp->AddEntry(gp[i], st, "p");
+      }
     legp->Draw();
     
     //save pulls plot
@@ -638,7 +712,7 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "\\gamma", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "k", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -687,6 +761,8 @@ public:
       // plot only if there are no points in dataset being considered
       if(nval != 0)
 	plotcanv(nsets, sets);
+      else
+	plotempty(nsets, sets);
 
       //break cycle when we get to the last dataset
       if(sets[nsets-1] == n_states-1)

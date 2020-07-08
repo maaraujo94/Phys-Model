@@ -2,6 +2,7 @@
  - aux classes for param types, string parser, style functions
  - all functions that make up the cross-section model used */
 
+#include "LHAPDF/LHAPDF.h"
 #include "TCanvas.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
@@ -18,11 +19,15 @@
 #include "TMath.h"
 #include <fstream>
 #include <iostream>
+
+using namespace LHAPDF;
 using namespace std;
 
 // normalization point (sqrt(s^hat)/M, cosalpha)*
 double sqsmNorm = 9.;
 double cosaNorm = 0.;
+
+PDF *pdf_ct = mkPDF("CT14nnlo", 0);
 
 // function to parse a string into components separated by "deli"
 vector< string > parseString( string line, string deli) {
@@ -72,12 +77,25 @@ public:
   }
 };
 
-//the parametrization of the pdf function
-double pdf(double x, double b, double c, double d, double e)
+//the parametrization of the pdf function with LHAPDF NNLO_CTEQ14 
+double pdf_new(double x, double q2)
 {
   if (x>1)
     return 0;
-  return pow(x, -b) * pow(1-x, c) * (1 + d*sqrt(x) + e*x);
+  return pdf_ct->xfxQ2(21, x, q2);
+}
+
+//the parametrization of the pdf function with b, c
+double pdf_old(double x, double b, double c)
+{
+  if (x>1)
+    return 0;
+  return pow(x,-b)*pow(1-x,c);
+}
+
+double alpha(double q2)
+{
+  return pdf_ct->alphasQ2(q2);
 }
 
 //the function to be integrated
@@ -92,10 +110,13 @@ double integf(double *par)
   double en = (s+1) / (2*sqsm);
   double x1 = sqsm/par[0] * exp( 0.5*(par[2]+par[3]) );
   double x2 = sqsm/par[0] * exp( -0.5*(par[2]+par[3]) );
+
   double cosa = (sqrt( 1 + par[1]*par[1] ) * sinh(0.5*(par[2]-par[3]))) / p;
 
-  double fx1 = pdf(x1, par[10], par[11], par[12], par[13]);
-  double fx2 = pdf(x2, par[10], par[11], par[12], par[13]);
+  double fx1 = pdf_new(x1, s);
+  double fx2 = pdf_new(x2, s);
+  //double fx1 = pdf_old(x1, par[10], par[11]);
+  //double fx2 = pdf_old(x2, par[10], par[11]);
 
   //the dsigma/dt^star function multiplied by jacobian sqrt(s^star)*p^star
   double gfunc = (pow(en + p*cosa, -par[6]) + pow(en - p*cosa, -par[6])) * pow(1+eps-cosa*cosa, -par[7]) * pow(en, par[6]) / 2.;
@@ -103,9 +124,10 @@ double integf(double *par)
   double emp = 1. + par[8]*cosa*cosa;
 
   double dsdt = gfunc * emp * hfunc;
-  double jac = sqsm*s/p;
+  double jac = sqsm/p;
+  double alpha_pow = pow(alpha(s), par[9]);
 
-  return fx1 * fx2 * dsdt * jac;
+  return fx1 * fx2 * dsdt * jac * alpha_pow;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
@@ -123,7 +145,8 @@ double sig(vector <double> par)
   for(int i=0; i < fin; i++)
     {
       pars[3] = y4;
-      sum += ( par[1] / pow(par[0], 2) ) * integf(pars) * dy * ( par[3] / pow(par[4],5));
+      sum += par[1]  * integf(pars) * dy * ( par[3] / pow(par[4],5));
+      //sum += integf(pars) * dy * ( par[3] / pow(par[4],5));
       y4 += dy;
     }
  
@@ -159,7 +182,8 @@ double sigplot(double sqsfm, double pTM, double y, double L, double M, double be
   for(int i=0; i < fin; i++)
     {
       pars[3] = y4;
-      sum += ( pTM / pow(sqsfm, 2) ) * integf(pars) * dy * ( L / pow(M,5));
+      sum += pTM  * integf(pars) * dy * ( L / pow(M,5));
+      //sum += integf(pars) * dy * ( L / pow(M,5));
       y4 += dy;
     }
 

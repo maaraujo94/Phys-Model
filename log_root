@@ -1,0 +1,224 @@
+
+Processing c_test.C(1)...
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     1 Ljpsi        1.98240e-01  1.98240e-02     no limits
+     2 Lups1        5.25966e+01  5.25966e+00     no limits
+ **********
+ **    1 **FIX           2
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     3 LLHCb_psi_y1   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    2 **FIX           3
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     4 LLHCb_psi_y2   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    3 **FIX           4
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     5 LLHCb_psi_y3   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    4 **FIX           5
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     6 LLHCb_psi_y4   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    5 **FIX           6
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     7 LLHCb_psi_y5   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    6 **FIX           7
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     8 LLHCb_Y1_y1   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    7 **FIX           8
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     9 LLHCb_Y1_y2   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    8 **FIX           9
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    10 LLHCb_Y1_y3   1.00000e+00  1.00000e-01     no limits
+ **********
+ **    9 **FIX          10
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    11 LLHCb_Y1_y4   1.00000e+00  1.00000e-01     no limits
+ **********
+ **   10 **FIX          11
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    12 beta         2.40000e+00  2.50000e-01     no limits
+    13 tau          0.00000e+00  2.50000e-01     no limits
+ **********
+ **   11 **FIX          13
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    14 rho          2.00000e+00  2.50000e-01     no limits
+    15 delta        1.00000e+00  1.00000e+00     no limits
+ **********
+ **   12 **FIX          15
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    16 lambda       0.00000e+00  5.00000e-01     no limits
+ **********
+ **   13 **FIX          16
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    17 k            0.00000e+00  5.00000e-01     no limits
+ **********
+ **   14 **FIX          17
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    18 b            1.80000e+00  1.00000e-01     no limits
+ **********
+ **   15 **FIX          18
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    19 c            6.00000e+00  1.00000e-01     no limits
+ **********
+ **   16 **FIX          19
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    20 d            0.00000e+00  1.00000e+00     no limits
+ **********
+ **   17 **FIX          20
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    21 e            0.00000e+00  1.00000e+00     no limits
+ **********
+ **   18 **FIX          21
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    22 br_jpsi_dm   1.00000e+00  1.00000e-01     no limits
+    23 br_ups1_dm   1.00000e+00  1.00000e-01     no limits
+ **********
+ **   19 **FIX          23
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    24 L_CMS        1.00000e+00  1.00000e-01     no limits
+    25 L_ATLAS      1.00000e+00  1.00000e-01     no limits
+ **********
+ **   20 **FIX          25
+ **********
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+    26 L_LHCb_psi   1.00000e+00  1.00000e-01     no limits
+    27 L_LHCb_ups   1.00000e+00  1.00000e-01     no limits
+ **********
+ **   21 **FIX          27
+ **********
+ **********
+ **   22 **MIGRAD
+ **********
+ FIRST CALL TO USER FUNCTION AT NEW START POINT, WITH IFLAG=4.
+ START MIGRAD MINIMIZATION.  STRATEGY  1.  CONVERGENCE WHEN EDM .LT. 1.00e-04
+ FCN=3.49438e+07 FROM MIGRAD    STATUS=INITIATE       28 CALLS          29 TOTAL
+                     EDM= unknown      STRATEGY= 1      NO ERROR MATRIX       
+  EXT PARAMETER               CURRENT GUESS       STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Ljpsi        1.98240e-01   1.98240e-02   1.98240e-02   3.59864e+08
+   2  Lups1        5.25966e+01     fixed    
+   3  LLHCb_psi_y1   1.00000e+00     fixed    
+   4  LLHCb_psi_y2   1.00000e+00     fixed    
+   5  LLHCb_psi_y3   1.00000e+00     fixed    
+   6  LLHCb_psi_y4   1.00000e+00     fixed    
+   7  LLHCb_psi_y5   1.00000e+00     fixed    
+   8  LLHCb_Y1_y1   1.00000e+00     fixed    
+   9  LLHCb_Y1_y2   1.00000e+00     fixed    
+  10  LLHCb_Y1_y3   1.00000e+00     fixed    
+  11  LLHCb_Y1_y4   1.00000e+00     fixed    
+  12  beta         2.40000e+00   2.50000e-01   2.50000e-01  -1.04280e+08
+  13  tau          0.00000e+00     fixed    
+  14  rho          2.00000e+00   2.50000e-01   2.50000e-01   1.54671e+08
+  15  delta        1.00000e+00     fixed    
+  16  lambda       0.00000e+00     fixed    
+  17  k            0.00000e+00     fixed    
+  18  b            1.80000e+00     fixed    
+  19  c            6.00000e+00     fixed    
+  20  d            0.00000e+00     fixed    
+  21  e            0.00000e+00     fixed    
+  22  br_jpsi_dm   1.00000e+00   1.00000e-01   1.00000e-01  -2.52415e+07
+  23  br_ups1_dm   1.00000e+00     fixed    
+  24  L_CMS        1.00000e+00   1.00000e-01   1.00000e-01  -2.52415e+07
+  25  L_ATLAS      1.00000e+00     fixed    
+  26  L_LHCb_psi   1.00000e+00   1.00000e-01   1.00000e-01  -4.61125e+07
+  27  L_LHCb_ups   1.00000e+00     fixed    
+ MIGRAD MINIMIZATION HAS CONVERGED.
+ MIGRAD WILL VERIFY CONVERGENCE AND ERROR MATRIX.
+ COVARIANCE MATRIX CALCULATED SUCCESSFULLY
+ FCN=310.339 FROM MIGRAD    STATUS=CONVERGED     641 CALLS         642 TOTAL
+                     EDM=1.13973e-05    STRATEGY= 1      ERROR MATRIX ACCURATE 
+  EXT PARAMETER                                   STEP         FIRST   
+  NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
+   1  Ljpsi        1.35008e-02   1.12950e-03   8.81093e-07  -1.36957e+01
+   2  Lups1        5.25966e+01     fixed    
+   3  LLHCb_psi_y1   1.00000e+00     fixed    
+   4  LLHCb_psi_y2   1.00000e+00     fixed    
+   5  LLHCb_psi_y3   1.00000e+00     fixed    
+   6  LLHCb_psi_y4   1.00000e+00     fixed    
+   7  LLHCb_psi_y5   1.00000e+00     fixed    
+   8  LLHCb_Y1_y1   1.00000e+00     fixed    
+   9  LLHCb_Y1_y2   1.00000e+00     fixed    
+  10  LLHCb_Y1_y3   1.00000e+00     fixed    
+  11  LLHCb_Y1_y4   1.00000e+00     fixed    
+  12  beta         2.38861e+00   1.05212e-02   4.59594e-05   2.69937e-01
+  13  tau          0.00000e+00     fixed    
+  14  rho          9.32807e-01   1.61426e-01   1.32668e-04  -6.83203e-02
+  15  delta        1.00000e+00     fixed    
+  16  lambda       0.00000e+00     fixed    
+  17  k            0.00000e+00     fixed    
+  18  b            1.80000e+00     fixed    
+  19  c            6.00000e+00     fixed    
+  20  d            0.00000e+00     fixed    
+  21  e            0.00000e+00     fixed    
+  22  br_jpsi_dm   9.94598e-01   5.51357e-03   4.10613e-05   4.81526e-01
+  23  br_ups1_dm   1.00000e+00     fixed    
+  24  L_CMS        9.06320e-01   1.96596e-02   6.85661e-05   2.83007e-01
+  25  L_ATLAS      1.00000e+00     fixed    
+  26  L_LHCb_psi   1.18182e+00   2.67182e-02   1.19267e-04  -7.93461e-02
+  27  L_LHCb_ups   1.00000e+00     fixed    
+ EXTERNAL ERROR MATRIX.    NDIM=  28    NPAR=  6    ERR DEF=1
+  1.276e-06  3.704e-06 -1.763e-04  1.629e-07  3.125e-06  7.572e-06 
+  3.704e-06  1.107e-04 -4.319e-04 -4.019e-06 -7.710e-05  1.169e-04 
+ -1.763e-04 -4.319e-04  2.606e-02  5.228e-06  1.003e-04 -1.768e-04 
+  1.629e-07 -4.019e-06  5.228e-06  3.040e-05 -7.930e-06  1.199e-05 
+  3.125e-06 -7.710e-05  1.003e-04 -7.930e-06  3.865e-04  2.300e-04 
+  7.572e-06  1.169e-04 -1.768e-04  1.199e-05  2.300e-04  7.139e-04 
+ PARAMETER  CORRELATION COEFFICIENTS  
+       NO.  GLOBAL      1     12     14     22     24     26
+        1  0.99589   1.000  0.312 -0.967  0.026  0.141  0.251
+       12  0.86187   0.312  1.000 -0.254 -0.069 -0.373  0.416
+       14  0.99543  -0.967 -0.254  1.000  0.006  0.032 -0.041
+       22  0.50273   0.026 -0.069  0.006  1.000 -0.073  0.081
+       24  0.91438   0.141 -0.373  0.032 -0.073  1.000  0.438
+       26  0.85521   0.251  0.416 -0.041  0.081  0.438  1.000
+67 data points
+ndf 64
+chi^2 norm : 4.84905
+chi^2 prob : 5.08841e-34
+Fit option given was 1, therefore fit was performed

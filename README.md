@@ -1,12 +1,13 @@
 # Phys-Model
-Global fit model using a physical description including a PDF
+Global fit model using a physical description including a PDF. To run fit must use cycle.sh, to read the LHAPDF library.
 
 Important files:
+
 0) dataid_ref
 consult to know which datasets are used in each fit, respective dataid and corrections to apply on cross-section measurements
 
 1) c_test
-Does the actual fit. First calls all auxiliary functions to read fit data and fit parameters, then either fits and plots or just plots from existing fit file
+Does the actual fit. First calls all auxiliary functions to read fit data and fit parameters, then either fits and plots or just plots from existing fit file. More detailed info on auxiliary .txt files and the steps of the process in comments here
 
 2) fitModel
 Defines the class containing all necessary variables and methods for the fit workflow

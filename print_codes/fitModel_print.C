@@ -2,7 +2,7 @@
  - store data, parameters, fit results
  - run fit and plotting
  also contains the minuitFunction wrapper for the fit call
-"print" means it's the version used to store the cosalpha distribution */
+"print" means its the version used to store the cosalpha distribution */
 
 //early declaraction of minuitFunction for the doFit call in the main class
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg);
@@ -454,6 +454,75 @@ public:
     for(int i = 5; i < len; i++)
       sigpar[i] = fitpar[i-5+nparam[0]];
   }
+
+  void plotempty(int nsets, int *sets) {
+    string savename;
+
+    double posif[4];
+    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], posif);
+
+    vector <string> saux = parseString(statename[sets[0]], "/");
+    saux = parseString(saux[saux.size()-1], "_");
+    double sqrts = stof(saux[2]);
+   
+    TCanvas *c = new TCanvas("title", "name", 700, 700);
+    c->SetLogy();
+    TH1F *fc = c->DrawFrame(posif[0], posif[1], posif[2], posif[3]);
+    fc->SetXTitle("p_{T}/M");
+    fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
+    fc->GetYaxis()->SetTitleOffset(1);
+    c->Modified();
+    c->SetTitle("");
+
+    // text on the plot
+    TLatex lc;
+    double xpos = getPos(posif[0], posif[2], 0.625, 0);
+    lc.SetTextSize(0.03);
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    xpos = getPos(posif[0], posif[2], 1./20, 0);
+    lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
+    
+    savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs.pdf";
+    const char *st = savename.c_str();
+    c->SaveAs(st);
+
+    // redo plotting for pulls
+    c->Clear();
+    c->SetLogy(0);
+
+    TH1F *fp = c->DrawFrame(posif[0], -10, posif[2], 10);
+    fp->SetXTitle("p_{T}/M");
+    fp->SetYTitle("pulls");
+    fp->GetYaxis()->SetTitleOffset(1);
+    c->Modified();
+    c->SetTitle("");
+   
+    //plot line at zero
+    TF1 *zero = new TF1("zero", "0", posif[0], posif[2]);
+    zero->SetLineColor(kBlue);
+    zero->SetLineStyle(7);
+    zero->Draw("lsame");
+
+    // plot pt/M cutoff
+    TLine *ptm = new TLine(ptmmin, -10, ptmmin, 10);
+    ptm->SetLineStyle(7);
+    ptm->Draw("lsame");
+
+    //text on the plot
+    TLatex lp;
+    lp.SetTextSize(0.03);
+    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lp.DrawLatex(xpos, getPos(-10, 10, 1./20, 0), Form("pp %.0f TeV", sqrts));
+    
+    // save pulls plots
+    savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
+    const char* savep = savename.c_str();
+    c->SaveAs(savep);
+    
+    c->Destructor();
+  }
   
   //method that plots everything in each canvas
   void plotcanv(int nsets, int *sets) {
@@ -639,7 +708,7 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "\\gamma", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "k", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -688,6 +757,8 @@ public:
       // plot only if there are no points in dataset being considered
       if(nval != 0)
 	plotcanv(nsets, sets);
+      else
+	plotempty(nsets, sets);
 
       //break cycle when we get to the last dataset
       if(sets[nsets-1] == n_states-1)
