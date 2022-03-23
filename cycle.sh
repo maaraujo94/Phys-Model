@@ -12,7 +12,7 @@ com="c_test.C(1)"
 
 root -l <<EOF
 gSystem->Load("/home/mariana/local/lib/libLHAPDF.so");
-gSystem->AddIncludePath("/home/mariana/local/include")
+.include /home/mariana/local/include
 .x $com
 .q
 EOF
@@ -29,7 +29,7 @@ cd ..
 
 cp fit.txt fit_res/
 cp -r plots fit_res/
-cp log_root fit_res/
+#cp log_root fit_res/
 
 # 2) call shell command to run fit over several values of a parameter
 <<COMM

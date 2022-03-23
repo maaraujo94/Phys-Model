@@ -1,7 +1,7 @@
 /* code containing the class that does all the fit work
- - store data, parameters, fit results
- - run fit and plotting
- also contains the minuitFunction wrapper for the fit call */
+   - store data, parameters, fit results
+   - run fit and plotting
+   also contains the minuitFunction wrapper for the fit call */
 
 //early declaraction of minuitFunction for the doFit call in the main class
 void minuitFunction(int& nDim, double* gout, double& result, double par[], int flg);
@@ -42,13 +42,13 @@ public:
   // determined on fitting step
 
   // ndf: nr data points - nr free params
-  // ptmmin, PTMNORM: minimum pT/M of fit, normalization pT/M (OUTDATED!)
+  // ptmmin, xiNorm: minimum pT/M of fit, normalization pT/M (OUTDATED!)
   // chisquare: chi^2 of the fit
   // fitresname: filename to store the fit results
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
-  double ptmmin = 2., PTMNORM = 4., chisquare;
+  double ptmmin = 2., chisquare;
   string fitresname = "fit.txt";
   vector <double> fitpar, efitpar, sigpar;
 
@@ -135,7 +135,7 @@ public:
 
     // vector of strings for legends and savenames
     auxnames.resize(3);
-    
+
     // read and input all datafiles from statename
     for(int id = 0; id < n_states; id++) {
       saux = parseString(statename[id], "/");
@@ -146,7 +146,7 @@ public:
       auxnames[0].push_back(saux[0]);
       auxnames[1].push_back(saux[1]);
       auxnames[2].push_back(parseString(saux[saux.size()-1], ".")[0]);
-
+      
       if(read_flag[id]) file.open(statename[id]);
       if(file.is_open()) {
 	saux = parseString(statename[id], "/");
@@ -164,9 +164,11 @@ public:
 	/* [0] = mass, [1] = yi, [2] = yf, [3] = pT/M, [4] = pTi/M, [5] = pTf/M
 	   [6] = sigma*mass/norm, [7] = e(sigma), [8] = K(pol), [9] = sqrt(s)
 	   [10] = stateid 	 */
+
 	for(int j = 0; j < n_pts[id]; j++) {
-	  for(int i = 0; i < 12; i++)
+	  for(int i = 0; i < 12; i++) {
 	    file >> nums[i];
+	  }
 	  
 	  // aux to correct unc: TODO should make the numbers here a variable to be read off somewhere
 	  if(unc_method[id] == 1)
@@ -191,6 +193,7 @@ public:
 	  datasigma[8].push_back(nums[10]/nums[11]-1);
 	  datasigma[9].push_back(sqrts);
 	  datasigma[10].push_back(id);
+
 	}
       }
       file.close();
@@ -267,7 +270,7 @@ public:
       sigpar[1] = datasigma[4][i]+xpt*dpt/(npt-1.)+1e-10;
       for(int xy = 0; xy < ny; xy++) {
 	sigpar[2] = datasigma[1][i]+xy*dy/(ny-1.);
-	cs+=sig(sigpar);
+	cs+=sigN(sigpar);
       }
     }
     cs/=(nsteps);
@@ -336,12 +339,14 @@ public:
     double min_dpt = 100;
     int min_i = 0;
 
-    for(int i = init_i; i < init_i + len_i; i++)
-      if(abs(datasigma[3][i] - PTMNORM) < min_dpt) {
-	min_i = i;
-	min_dpt = abs(datasigma[3][i] - PTMNORM);
+    for(int i = init_i; i < init_i + len_i; i++) {
+      if(datasigma[9][i] == sqsNorm) {
+	if(abs(datasigma[3][i] - xiNorm) < min_dpt) {
+	  min_i = i;
+	  min_dpt = abs(datasigma[3][i] - xiNorm);
+	}
       }
-    
+    }
     return datasigma[6][min_i];
   }
   
@@ -355,15 +360,15 @@ public:
     fit->SetFCN(minuitFunction);
 
     // initialize normalizations
-    int len_n[2] = {0};
+    int len_n[1] = {0};
     double L_est[nparam[0]];
-    for(int i = 0; i < 6; i++) len_n[0] += n_pts[i];
-    for(int i = 6; i < 14; i++) len_n[1] += n_pts[i];
-    for(int i = 0; i < 2; i++) {
+    for(int i = 0; i < 18; i++) len_n[0] += n_pts[i];
+    //for(int i = 6; i < 14; i++) len_n[1] += n_pts[i];
+    for(int i = 0; i < 1; i++) {
       L_est[i] = lest(aux_int, len_n[i]);
       aux_int += len_n[i];
     }
-    for(int i = 2; i < nparam[0]; i++) L_est[i] = 1.;
+    for(int i = 1; i < nparam[0]; i++) L_est[i] = 1.;
 
     // initialize norm parameters
     for(int i = 0; i < nparam[0]; i++) {
@@ -608,7 +613,7 @@ public:
 	
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13])", ptmmin, 49.9);
+	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6])", ptmmin, 49.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	if(datasigma[1][counter] > 0)
 	  f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
@@ -712,12 +717,12 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "L_{LHCb,\\psi}(y1)", "L_{LHCb,\\psi}(y2)", "L_{LHCb,\\psi}(y3)", "L_{LHCb,\\psi}(y4)", "L_{LHCb,\\psi}(y5)","L_{LHCb,\\Upsilon}(y1)", "L_{LHCb,\\Upsilon}(y2)", "L_{LHCb,\\Upsilon}(y3)", "L_{LHCb,\\Upsilon}(y4)", "\\beta", "\\tau", "\\rho", "\\delta", "\\lambda", "k", "b", "c", "d", "e", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS}", "\\mathcal L_{ATLAS}", "\\mathcal L_{LHCb}(\\psi)", "\\mathcal L_{LHCb}(\\Upsilon)"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "\\beta", "\\rho", "\\delta", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
 
-    tex << "\\begin{table}" << endl;
+    tex << "\\begin{table}[h!]" << endl;
     tex << "\\centering" << endl;
     tex << "\\begin{tabular}{c|c|c}" << endl;
     tex << "Parameter & Value & Uncertainty \\\\" << endl;
@@ -739,7 +744,7 @@ public:
       tex << fitpar[i+nparam[0]+nparam[1]] << " & ";
       if(efitpar[i+nparam[0]+nparam[1]] == 0) tex << "fixed \\\\" << endl;
       else tex << efitpar[i+nparam[0]+nparam[1]] << " \\\\" << endl;
-      }
+    }
     tex << "min $p_T/M$ & " << ptmmin << " & fixed \\\\" << endl;
     tex << "\\end{tabular}" << endl;
     tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << chisquare << " / " << ndf << " = " << chisquare/ndf << ")}" << endl;

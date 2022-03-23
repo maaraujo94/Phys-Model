@@ -23,9 +23,10 @@
 using namespace LHAPDF;
 using namespace std;
 
-// normalization point (sqrt(s^hat)/M, cosalpha)*
-double sqsmNorm = 9.;
-double cosaNorm = 0.;
+// normalization point (sqrt(s), xi, y)*
+double sqsNorm = 7000.;
+double xiNorm = 5.;
+double yNorm = 1.;
 
 PDF *pdf_ct = mkPDF("CT14nnlo", 0);
 
@@ -78,130 +79,103 @@ public:
 };
 
 //the parametrization of the pdf function with LHAPDF NNLO_CTEQ14 
-double pdf_new(double x, double q2)
+double pdf_new(double x, double q2, double s)
 {
-  if (x>1)
+  double x_min = q2 / s;
+  if ( x > 1 || x < x_min)
     return 0;
   return pdf_ct->xfxQ2(21, x, q2);
 }
 
-//the parametrization of the pdf function with b, c
-double pdf_old(double x, double b, double c)
-{
-  if (x>1)
-    return 0;
-  return pow(x,-b)*pow(1-x,c);
-}
-
+// the alpha function (currently unused)
 double alpha(double q2)
 {
   return pdf_ct->alphasQ2(q2);
 }
 
 //the function to be integrated
-//par-> [0]: sqsfm, [1]: pTM, [2]: y, [3]: y4, [4]: beta, [5]: tau, [6]: rho, [7]: delta, [8]: lambda, [9]: gamma, [10]: b, [11]: c, [12]: d, [13]: e
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: cosalpha, [4]: M, [5]: beta, [6]: rho, [7]: delta
 double integf(double *par)
 {
   double eps = 1e-5;
+
+  double pstar = par[1] / sqrt(1.+eps-par[3]*par[3]);
+  double sqstar = pstar + sqrt(1.+pstar*pstar);
+  double sstar = sqstar*sqstar;
+  double Estar = (sstar+1)/(2*sqrt(sstar));
   
-  double p = sqrt( par[1] * par[1] * pow( cosh(0.5*(par[2]-par[3])), 2) + pow( sinh(0.5*(par[2]-par[3])), 2) );
-  double sqsm = p + sqrt( 1 + p*p );
-  double s = sqsm*sqsm;
-  double en = (s+1) / (2*sqsm);
-  double x1 = sqsm/par[0] * exp( 0.5*(par[2]+par[3]) );
-  double x2 = sqsm/par[0] * exp( -0.5*(par[2]+par[3]) );
+  double pLstar = pstar * par[3];
+  double y_hat = 0.5*log((Estar + pLstar)/(Estar - pLstar));
+  double y_gg = par[2] - y_hat;
+  double x1 = sqstar/par[0]*exp(y_gg);
+  double x2 = sqstar/par[0]*exp(-y_gg);
 
-  double cosa = (sqrt( 1 + par[1]*par[1] ) * sinh(0.5*(par[2]-par[3]))) / p;
+  double s_hat = sstar*par[4]*par[4];
+  double s = pow(par[0]*par[4], 2);
+  double fx1 = pdf_new(x1, s_hat, s);
+  double fx2 = pdf_new(x2, s_hat, s);
 
-  double fx1 = pdf_new(x1, s);
-  double fx2 = pdf_new(x2, s);
-  //double fx1 = pdf_old(x1, par[10], par[11]);
-  //double fx2 = pdf_old(x2, par[10], par[11]);
-
-  //the dsigma/dt^star function multiplied by jacobian sqrt(s^star)*p^star
-  double gfunc = (pow(en + p*cosa, -par[6]) + pow(en - p*cosa, -par[6])) * pow(1+eps-cosa*cosa, -par[7]) * pow(en, par[6]) / 2.;
-  double hfunc = pow(p, par[5])*pow(s,-par[4]-par[5]/2.);
-  double emp = 1. + par[8]*cosa*cosa;
-
-  double dsdt = gfunc * emp * hfunc;
-  double jac = sqsm/p;
-  double alpha_pow = pow(alpha(s), par[9]);
-
-  return fx1 * fx2 * dsdt * jac * alpha_pow;
+  //the dsigma/dt^star function multiplied by mass-normalized jacobian
+  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]);
+  double hfunc = pow(sstar, -par[5]);
+ 
+  double dsdt = gfunc * hfunc;
+  double jac = pstar/Estar * (sstar-1.);
+  
+  return fx1 * fx2 * jac * dsdt;
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
-//par-> [0]: sqsfm, [1]: pT/M, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: tau, [7]: rho, [8]: delta, [9]: lambda, [10]: gamma, [11]: b, [12]: c, [13]: d, [14]: e
-double sig(vector <double> par)
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: M, [4]: beta, [5]: rho, [6]: delta
+double sig(double *par)
 {
   double sum = 0;
+
+  double cosa_lim = 1;
+  double d_cosa = 0.1;
+  int n_cosa = (2.*cosa_lim)/d_cosa;
+
+  double cosa = -cosa_lim;
+  double pars[8]={par[0], par[1], par[2], cosa, par[3], par[4], par[5], par[6]};
   
-  double ylim = acosh( 1/par[1] * ( par[0] - sqrt(1+par[1]*par[1]) * cosh(par[2])));
-  double fin = 26;
-  double dy = 2*ylim/(fin-1.);
-  double y4 = -ylim;
-  double pars[14]={par[0], par[1], par[2], y4, par[5], par[6], par[7], par[8], par[9], par[10], par[11], par[12], par[13], par[14]};
-  
-  for(int i=0; i < fin; i++)
+  for(int i=0; i <= n_cosa; i++)
     {
-      pars[3] = y4;
-      sum += par[1]  * integf(pars) * dy * ( par[3] / pow(par[4],5));
-      //sum += integf(pars) * dy * ( par[3] / pow(par[4],5));
-      y4 += dy;
+      pars[3] = cosa;
+      sum += 1. / ( pow(par[3],5) * par[1]) * d_cosa * integf(pars);
+      cosa += d_cosa;
     }
- 
-  //get the normalization value
-  double sNorm = sqsmNorm*sqsmNorm;
-  double eps = 1e-5;
+  
+  return sum;
+}
 
-  double pNorm = (sNorm-1)/(2*sqsmNorm);
-  double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
-  double eNorm = (sNorm+1)/(2*sqsmNorm);
+// the cross section function with normalization applied
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: rho, [7]: delta
+double sigN(vector <double> par)
+{
+  double pars[7] = {par[0], par[1], par[2], par[4], par[5], par[6], par[7]};
+  double sigFull = sig(pars);
 
-  double gfNorm = (pow(eNorm + pNorm*cosaNorm, -par[7]) + pow(eNorm - pNorm*cosaNorm, -par[7])) * pow(1+eps-cosaNorm*cosaNorm, -par[8]) * pow(eNorm, par[7]) / 2;
-  double hfNorm = pow(pNorm, par[6])*pow(sNorm,-par[5]-par[6]/2);
-  double emp = 1 + par[9]*cosaNorm*cosaNorm;
+  pars[0] = sqsNorm/par[4];
+  pars[1] = xiNorm;
+  pars[2] = yNorm;
+  double sigNorm = sig(pars);
 
-  double dsdtNorm = gfNorm * emp * hfNorm;
-
-  return sum/dsdtNorm;
+  return par[3] * sigFull/sigNorm;
 }
 
 //sigma function for plotting
-//takes params individually rather than through pointer 
-double sigplot(double sqsfm, double pTM, double y, double L, double M, double beta, double tau, double rho, double delta, double lambda, double gamma, double b, double c, double d, double e)
+//takes params individually rather than through pointer
+double sigplot(double sqs_M, double xi, double y, double L, double M, double beta, double rho, double delta)
 {
-  double sum = 0;
-  
-  double ylim = acosh( 1/pTM * ( sqsfm - sqrt(1+pTM*pTM) * cosh(y)));
-  double fin = 26;
-  double dy = 2*ylim/(fin-1.);
-  double y4 = -ylim;
-  double pars[14]={sqsfm, pTM, y, y4, beta, tau, rho, delta, lambda, gamma, b, c, d, e};
-  
-  for(int i=0; i < fin; i++)
-    {
-      pars[3] = y4;
-      sum += pTM  * integf(pars) * dy * ( L / pow(M,5));
-      //sum += integf(pars) * dy * ( L / pow(M,5));
-      y4 += dy;
-    }
+  double pars[7] = {sqs_M, xi, y, M, beta, rho, delta};
+  double sigFull = sig(pars);
 
-  //get the normalization value
-  double sNorm = sqsmNorm*sqsmNorm;
-  double eps = 1e-5;
-  
-  double pNorm = (sNorm-1)/(2*sqsmNorm);
-  double ptNorm = pNorm*sqrt(1-cosaNorm*cosaNorm);
-  double eNorm = (sNorm+1)/(2*sqsmNorm);
+  pars[0] = sqsNorm/M;
+  pars[1] = xiNorm;
+  pars[2] = yNorm;
+  double sigNorm = sig(pars);
 
-  double gfNorm = (pow(eNorm + pNorm*cosaNorm, -rho) + pow(eNorm - pNorm*cosaNorm, -rho)) * pow(1+eps-cosaNorm*cosaNorm, -delta) * pow(eNorm, rho) / 2;
-  double hfNorm = pow(pNorm, tau)*pow(sNorm,-beta-tau/2);
-  double emp = 1 + lambda*cosaNorm*cosaNorm;
-  
-  double dsdtNorm = gfNorm * emp * hfNorm;
-  
-  return sum/dsdtNorm;
+  return L * sigFull/sigNorm;
 }
 
 //calculates the average pT/M of a bin by weighing it with the model cs
@@ -215,8 +189,8 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
     par[1] = lbound + xpt*dpt/(npt-1.)+1e-10;
     for(int xy = 0; xy < ny; xy++) {
       par[2] = lybound + xy*dy/(ny-1.);
-      uint += sig(par)*par[1];
-      lint += sig(par);
+      uint += sigN(par)*par[1];
+      lint += sigN(par);
     }
   }
   return uint / lint;
