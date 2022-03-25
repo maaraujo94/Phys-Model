@@ -1,2 +1,2 @@
-Ljpsi   e(Ljpsi)   Lups1   e(Lups1)   beta   e(beta)   rho   e(rho)   delta   e(delta)   br_jpsi_dm   e(br_jpsi_dm)   br_ups1_dm   e(br_ups1_dm)   L_CMS_7   e(L_CMS_7)   L_CMS_13   e(L_CMS_13)   L_LHCb_7_jpsi   e(L_LHCb_7_jpsi)   L_LHCb_7   e(L_LHCb_7)   L_LHCb_13   e(L_LHCb_13)   chi2   ndf
-5.77389   0.0177355   1   0   2.86399   0.00519109   1.77375   0.167348   0   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0   995.036   277
+L_jpsi   e(L_jpsi)   L_psi2   e(L_psi2)   rho   e(rho)   delta   e(delta)   f_beta   e(f_beta)   br_jpsi_dm   e(br_jpsi_dm)   br_ups1_dm   e(br_ups1_dm)   L_CMS_7   e(L_CMS_7)   L_CMS_13   e(L_CMS_13)   L_LHCb_7_jpsi   e(L_LHCb_7_jpsi)   L_LHCb_7   e(L_LHCb_7)   L_LHCb_13   e(L_LHCb_13)   chi2   ndf
+0.645236   0.00255017   0.264253   0.00109207   2   0   0   0   0.0543338   0.00103103   1   0   1   0   1   0   1   0   1   0   1   0   1   0   1372.55   474

@@ -23,10 +23,9 @@
 using namespace LHAPDF;
 using namespace std;
 
-// normalization point (sqrt(s), xi, y)*
-double sqsNorm = 7000.;
-double xiNorm = 5.;
-double yNorm = 1.;
+// normalization point (sqrt(s*), cosalpha)_N
+double sqsNorm = 9.;
+double cosaNorm = 0.;
 
 PDF *pdf_ct = mkPDF("CT14nnlo", 0);
 
@@ -126,8 +125,8 @@ double integf(double *par)
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
-//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: M, [4]: beta, [5]: rho, [6]: delta
-double sig(double *par)
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: rho, [7]: delta
+double sig(vector <double> par)
 {
   double sum = 0;
 
@@ -136,46 +135,34 @@ double sig(double *par)
   int n_cosa = (2.*cosa_lim)/d_cosa;
 
   double cosa = -cosa_lim;
-  double pars[8]={par[0], par[1], par[2], cosa, par[3], par[4], par[5], par[6]};
+  double pars[8]={par[0], par[1], par[2], cosa, par[4], par[5], par[6], par[7]};
   
-  for(int i=0; i <= n_cosa; i++)
-    {
-      pars[3] = cosa;
-      sum += 1. / ( pow(par[3],5) * par[1]) * d_cosa * integf(pars);
-      cosa += d_cosa;
-    }
+  for(int i=0; i <= n_cosa; i++) {
+    pars[3] = cosa;
+    sum += d_cosa * integf(pars);
+    cosa += d_cosa;
+  }
+
+  double eps = 1e-5;
+  double sNorm = sqsNorm * sqsNorm;
+  double eNorm = (sNorm+1)/(2*sqsNorm);
+  double pNorm = (sNorm-1)/(2*sqsNorm);
   
+  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]);
+  double hNorm = pow(sNorm, -par[5]);
+
+  double nVal = gNorm*hNorm;
+
+  sum *= par[3] / ( pow(par[4],5) * par[1] * nVal);
   return sum;
-}
-
-// the cross section function with normalization applied
-//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: rho, [7]: delta
-double sigN(vector <double> par)
-{
-  double pars[7] = {par[0], par[1], par[2], par[4], par[5], par[6], par[7]};
-  double sigFull = sig(pars);
-
-  pars[0] = sqsNorm/par[4];
-  pars[1] = xiNorm;
-  pars[2] = yNorm;
-  double sigNorm = sig(pars);
-
-  return par[3] * sigFull/sigNorm;
 }
 
 //sigma function for plotting
 //takes params individually rather than through pointer
 double sigplot(double sqs_M, double xi, double y, double L, double M, double beta, double rho, double delta)
 {
-  double pars[7] = {sqs_M, xi, y, M, beta, rho, delta};
-  double sigFull = sig(pars);
-
-  pars[0] = sqsNorm/M;
-  pars[1] = xiNorm;
-  pars[2] = yNorm;
-  double sigNorm = sig(pars);
-
-  return L * sigFull/sigNorm;
+  vector <double> pars = {sqs_M, xi, y, L, M, beta, rho, delta};
+  return sig(pars);
 }
 
 //calculates the average pT/M of a bin by weighing it with the model cs
@@ -189,8 +176,8 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
     par[1] = lbound + xpt*dpt/(npt-1.)+1e-10;
     for(int xy = 0; xy < ny; xy++) {
       par[2] = lybound + xy*dy/(ny-1.);
-      uint += sigN(par)*par[1];
-      lint += sigN(par);
+      uint += sig(par)*par[1];
+      lint += sig(par);
     }
   }
   return uint / lint;
@@ -204,6 +191,12 @@ int getStyle(string det) {
   else return 1;
 }
 
+int getCol(int i_set) {
+  if(i_set == 2) return kGreen+1;
+  else if(i_set == 4) return kOrange+1;
+  else return i_set+1;
+}
+
 // define plot range depending on data label
 void aRange(string det, string state, double *apos) {
   apos[0] = -1;
@@ -212,9 +205,17 @@ void aRange(string det, string state, double *apos) {
     apos[1] = 1.01e-5;
     apos[2] = 39.9;
   }
-  else {
+  else if(det == "LHCb" && state == "jpsi"){
+    apos[1] = 1.01e-1;
+    apos[2] = 7.9;
+  }
+  else if (det == "CMS" && state == "psi2"){
     apos[1] = 1.01e-4;
-    apos[2] = 10.9;
+    apos[2] = 29.9;
+  }
+  else if (det == "LHCb" && state == "psi2"){
+    apos[1] = 1.01e-3;
+    apos[2] = 8.9;
   }
 }
 

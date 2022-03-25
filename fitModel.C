@@ -42,13 +42,13 @@ public:
   // determined on fitting step
 
   // ndf: nr data points - nr free params
-  // ptmmin, xiNorm: minimum pT/M of fit, normalization pT/M (OUTDATED!)
+  // ptmmin, ptN: minimum pT/M of fit, normalization pT/M (OUTDATED!)
   // chisquare: chi^2 of the fit
   // fitresname: filename to store the fit results
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
-  double ptmmin = 2., chisquare;
+  double ptmmin = 2., chisquare, ptN = 3, sqsN = 7000;
   string fitresname = "fit.txt";
   vector <double> fitpar, efitpar, sigpar;
 
@@ -73,7 +73,7 @@ public:
   void init() {
     const int nStates = 17;
   
-    string StateNm[nStates] = { "jpsi", "chic0", "chic1", "chic2", "psip", "ups1", "chib0_1P", "chib1_1P", "chib2_1P", "ups2", "chib0_2P", "chib1_2P", "chib2_2P", "ups3", "chib0_3P", "chib1_3P", "chib2_3P" };
+    string StateNm[nStates] = { "jpsi", "chic0", "chic1", "chic2", "psi2", "ups1", "chib0_1P", "chib1_1P", "chib2_1P", "ups2", "chib0_2P", "chib1_2P", "chib2_2P", "ups3", "chib0_3P", "chib1_3P", "chib2_3P" };
     double M[nStates] = { 3.097, 3.415, 3.511, 3.556, 3.686, 9.460, 9.859,  9.893,    9.912,   10.023,  10.233,  10.255,  10.269,  10.355, 10.497,  10.512,    10.523 };
     string LatexNm[nStates] = { "J/#psi", "#chi_{c0}", "#chi_{c1}", "#chi_{c2}", "#psi(2S)", "#Upsilon(1S)", "#chi_{b0}(1P)", "#chi_{b1}(1P)", "#chi_{b2}(1P)", "#Upsilon(2S)", "#chi_{b0}(2P)", "#chi_{b1}(2P)", "#chi_{b2}(2P)", "#Upsilon(3S)", "#chi_{b0}(3P)", "#chi_{b1}(3P)", "#chi_{b2}(3P)" }; 
   
@@ -198,6 +198,12 @@ public:
       }
       file.close();
     }
+    for(int i = 0; i < (int)datasigma[0].size(); i++) {
+      for(int j = 0; j < 11; j++) {
+	cout << datasigma[j][i] << " ";
+      }
+      cout << endl;
+    }
   }
   
   //method to read the types and initializations of each fit parameter from file
@@ -258,38 +264,44 @@ public:
   }
 
   // auxiliary function that calculates the cross section for a given data point
-  double csCalc(int i) {
-    
+  double csCalc(int i, double fbeta) {
     dpt = datasigma[5][i]-datasigma[4][i];
     dy = datasigma[2][i]-datasigma[1][i];
     npt = nmin + int(0.5 + dn*(dpt*QMass["psip"]-1.));
     nsteps = npt*ny;
-    
+
     double cs = 0.;
     for(int xpt = 0; xpt < npt; xpt++) {
       sigpar[1] = datasigma[4][i]+xpt*dpt/(npt-1.)+1e-10;
       for(int xy = 0; xy < ny; xy++) {
 	sigpar[2] = datasigma[1][i]+xy*dy/(ny-1.);
-	cs+=sigN(sigpar);
+	sigpar[5] = 2;
+	double c2 = sig(sigpar);
+	sigpar[5] = 3;
+	double c3 = sig(sigpar);
+	cs+=fbeta*c2+(1.-fbeta)*c3;
       }
     }
     cs/=(nsteps);
+
+    //cout << auxnames[1][datasigma[10][i]] << " " << datasigma[4][i] << " " << datasigma[2][i] << " " << cs << endl;
     return cs;
   }
   
   // fit function
   double myFunction(double *par) {
     //first calculate const normalization
-    int len = nparam[1] + 5;
+    int len = nparam[1] -1 + 6;
     sigpar.resize(len);
 
     for(int i = 0; i < len; i++) {
-      if(i < 5) sigpar[i] = 1;
-      else sigpar[i] = par[i-5+nparam[0]];
+      if(i < 6) sigpar[i] = 1;
+      else sigpar[i] = par[i-6+nparam[0]];
     }
-    
+
     double pred, chisq, sum = 0, ratio, lumibr;
     int counter = 0;
+    double fbeta = par[nparam[0]+nparam[1]-1];
 
     // run over all pts and get chisquare
     for(int id = 0; id < n_states; id++) {
@@ -311,7 +323,7 @@ public:
       for(int n = 0; n < n_pts[id]; n++)
 	if(datasigma[3][n+counter] >= ptmmin) {
 	  //calculate cs prediction
-	  pred = csCalc(n+counter);
+	  pred = csCalc(n+counter, fbeta);
 	  
 	  //ratio will be !=1 if we consider polarization
 	  //lambda=0.;
@@ -334,16 +346,17 @@ public:
   }
 
   //estimates initialization for L value
-  double lest(int init_i, int len_i)
+  double lest(string sName)
   {
     double min_dpt = 100;
     int min_i = 0;
+    int lds = datasigma[0].size();
 
-    for(int i = init_i; i < init_i + len_i; i++) {
-      if(datasigma[9][i] == sqsNorm) {
-	if(abs(datasigma[3][i] - xiNorm) < min_dpt) {
+    for(int i = 0; i < lds; i++) {
+      if(datasigma[9][i] == sqsN && auxnames[1][datasigma[10][i]].find(sName) == 0) {
+	if(abs(datasigma[3][i] - ptN) < min_dpt) {
 	  min_i = i;
-	  min_dpt = abs(datasigma[3][i] - xiNorm);
+	  min_dpt = abs(datasigma[3][i] - ptN);
 	}
       }
     }
@@ -360,15 +373,12 @@ public:
     fit->SetFCN(minuitFunction);
 
     // initialize normalizations
-    int len_n[1] = {0};
     double L_est[nparam[0]];
-    for(int i = 0; i < 18; i++) len_n[0] += n_pts[i];
-    //for(int i = 6; i < 14; i++) len_n[1] += n_pts[i];
-    for(int i = 0; i < 1; i++) {
-      L_est[i] = lest(aux_int, len_n[i]);
-      aux_int += len_n[i];
+    for(int i = 0; i < nparam[0]; i++) {
+      string sName = parseString(norm[i].name, "_")[1];
+      L_est[i] = lest(sName);
     }
-    for(int i = 1; i < nparam[0]; i++) L_est[i] = 1.;
+    //    for(int i = 1; i < nparam[0]; i++) L_est[i] = 1.;
 
     // initialize norm parameters
     for(int i = 0; i < nparam[0]; i++) {
@@ -390,7 +400,7 @@ public:
       if(nuis[i].fix == 1) fit->FixParameter(i+nparam[0]+nparam[1]);
       else aux_int++;
     }
-    
+
     fit->ExecuteCommand("MIGRAD",0,0);
     //fit->ExecuteCommand("MIGRAD",0,0);
 
@@ -451,12 +461,14 @@ public:
     fin >> chisquare >> ndf;
     fin.close();
 
+    double pred, chisq, sum = 0, ratio, lumibr;
+
     // resize sigpar and fill it appropriately
-    int len = nparam[1] + 5;
+    int len = nparam[1] -1 + 6;
     sigpar.resize(len);
 
-    for(int i = 5; i < len; i++)
-      sigpar[i] = fitpar[i-5+nparam[0]];
+    for(int i = 6; i < len; i++)
+      sigpar[i] = fitpar[i-6+nparam[0]];
   }
 
   void plotempty(int nsets, int *sets) {
@@ -495,7 +507,7 @@ public:
     c->Clear();
     c->SetLogy(0);
 
-    TH1F *fp = c->DrawFrame(posif[0], -10, posif[2], 10);
+    TH1F *fp = c->DrawFrame(posif[0], -9, posif[2], 9);
     fp->SetXTitle("p_{T}/M");
     fp->SetYTitle("pulls");
     fp->GetYaxis()->SetTitleOffset(1);
@@ -507,9 +519,22 @@ public:
     zero->SetLineColor(kBlue);
     zero->SetLineStyle(7);
     zero->Draw("lsame");
+    
+    TLine *plim1 = new TLine(posif[0], -5, posif[2], -5);
+    plim1->SetLineStyle(kDotted);
+    plim1->Draw("lsame");
+    TLine *plim2 = new TLine(posif[0], -3, posif[2], -3);
+    plim2->SetLineStyle(kDotted);
+    plim2->Draw("lsame");
+    TLine *plim3 = new TLine(posif[0], 3, posif[2], 3);
+    plim3->SetLineStyle(kDotted);
+    plim3->Draw("lsame");
+    TLine *plim4 = new TLine(posif[0], 5, posif[2], 5);
+    plim4->SetLineStyle(kDotted);
+    plim4->Draw("lsame");
 
     // plot pt/M cutoff
-    TLine *ptm = new TLine(ptmmin, -10, ptmmin, 10);
+    TLine *ptm = new TLine(ptmmin, -9, ptmmin, 9);
     ptm->SetLineStyle(7);
     ptm->Draw("lsame");
 
@@ -540,11 +565,12 @@ public:
     
     //get point of datasigma where current datasets start
     for(int i = 0; i < sets[0]; i++) counter += n_pts[i];
-    
+
     // plotting starts here
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetLogy();
     TH1F *fc = c->DrawFrame(posif[0], posif[1], posif[2], posif[3]);
+    fc->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
     fc->SetXTitle("p_{T}/M");
     fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
     fc->GetYaxis()->SetTitleOffset(1);
@@ -585,7 +611,7 @@ public:
 	  datapts[4][j] = datasigma[5][j+counter] - datapts[0][j];
 	  
 	  // filling arrays for pulls plotting
-	  cs = csCalc(j+counter);
+	  cs = csCalc(j+counter, fitpar[nparam[0]+nparam[1]-1]);
 	  pullpts[0][j] = (datapts[1][j] - cs) / datapts[2][j];
 	  pullpts[1][j] = 0.;
 	}
@@ -594,8 +620,8 @@ public:
 	
 	// data plots defined and drawn
 	gd[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
-	gd[i_set]->SetLineColor(i_set+1);
-	gd[i_set]->SetMarkerColor(i_set+1);
+	gd[i_set]->SetLineColor(getCol(i_set));
+	gd[i_set]->SetMarkerColor(getCol(i_set));
 	gd[i_set]->SetMarkerStyle(mkrStyle);
 	gd[i_set]->SetMarkerSize(.75);
 	gd[i_set]->Draw("P");
@@ -603,8 +629,8 @@ public:
 	// pulls plots defined (but not drawn)
 	// all pts below ptmmin aren't drawn
 	gp[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
-	gp[i_set]->SetLineColor(i_set+1);
-	gp[i_set]->SetMarkerColor(i_set+1);
+	gp[i_set]->SetLineColor(getCol(i_set));
+	gp[i_set]->SetMarkerColor(getCol(i_set));
 	gp[i_set]->SetMarkerStyle(mkrStyle);
 	gp[i_set]->SetMarkerSize(.75);
 	for(int i_data = 0; i_data < n_pts[id]; i_data++)
@@ -613,15 +639,16 @@ public:
 	
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6])", ptmmin, 49.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], 2, [5], [6]) + (1.-[4])*sigplot([0], x, [1], [2], [3], 3, [5], [6])", ptmmin, 49.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	if(datasigma[1][counter] > 0)
 	  f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
 	else
 	  f[i_set]->SetParameter(1, datasigma[2][counter]/2);
-	for(int j = 2; j < sigpar.size()-1; j++)
+	for(int j = 2; j < 7; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
-	f[i_set]->SetLineColor(i_set+1);
+	f[i_set]->SetParameter(4, fitpar[nparam[0]+nparam[1]-1]);
+	f[i_set]->SetLineColor(getCol(i_set));
 	f[i_set]->Draw("lsame");
 	
 	counter += n_pts[id];
@@ -630,7 +657,7 @@ public:
     
     // text on the plot
     TLatex lc;
-    double xpos = getPos(posif[0], posif[2], 0.625, 0);
+    double xpos = getPos(posif[0], posif[2], 0.675, 0);
     lc.SetTextSize(0.03);
     lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
     lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
@@ -638,14 +665,19 @@ public:
     lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     
     // draw legend
+    counter = 0;
+    for(int i = 0; i < sets[0]; i++) counter += n_pts[i];
+    
     double endpt = 0.85 - (double)nsets*0.05;  
-    TLegend *leg = new TLegend(0.6, endpt, 0.9, 0.9);
+    TLegend *leg = new TLegend(0.65, endpt, 0.9, 0.9);
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
-	savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
+	//savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
+	savename = Form("%.1f < y < %.1f", datasigma[1][counter], datasigma[2][counter]);
 	const char *st = savename.c_str();
-	leg->AddEntry(gd[i], st, "p");
+	leg->AddEntry(gd[i], st, "pl");
+	counter += n_pts[sets[i]];
       }
     leg->Draw();
     
@@ -658,8 +690,9 @@ public:
     c->Clear();
     c->SetLogy(0);
     
-    TH1F *fp = c->DrawFrame(posif[0], -10, posif[2], 10);
-    fp->SetXTitle("p_{T}/M");
+    TH1F *fp = c->DrawFrame(posif[0], -9, posif[2], 9);
+    fp->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
+fp->SetXTitle("p_{T}/M");
     fp->SetYTitle("pulls");
     fp->GetYaxis()->SetTitleOffset(1);
     c->Modified();
@@ -671,8 +704,21 @@ public:
     zero->SetLineStyle(7);
     zero->Draw("lsame");
 
+    TLine *plim1 = new TLine(posif[0], -5, posif[2], -5);
+    plim1->SetLineStyle(kDotted);
+    plim1->Draw("lsame");
+    TLine *plim2 = new TLine(posif[0], -3, posif[2], -3);
+    plim2->SetLineStyle(kDotted);
+    plim2->Draw("lsame");
+    TLine *plim3 = new TLine(posif[0], 3, posif[2], 3);
+    plim3->SetLineStyle(kDotted);
+    plim3->Draw("lsame");
+    TLine *plim4 = new TLine(posif[0], 5, posif[2], 5);
+    plim4->SetLineStyle(kDotted);
+    plim4->Draw("lsame");
+
     // plot pt/M cutoff
-    TLine *ptm = new TLine(ptmmin, -10, ptmmin, 10);
+    TLine *ptm = new TLine(ptmmin, -9, ptmmin, 9);
     ptm->SetLineStyle(7);
     ptm->Draw("lsame");
   
@@ -685,20 +731,12 @@ public:
     //text on the plot
     TLatex lp;
     lp.SetTextSize(0.03);
-    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
-    lp.DrawLatex(xpos, getPos(-10, 10, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
+    lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lp.DrawLatex(xpos, getPos(-9, 9, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     
     //draw legend
-    TLegend *legp = new TLegend(0.6, endpt, 0.9, 0.9);
-    legp->SetTextSize(0.03);
-    for(int i = 0; i < nsets; i++)
-      if (n_pts[sets[i]] > 0) {
-	savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
-	const char *st = savename.c_str();
-	legp->AddEntry(gp[i], st, "p");
-      }
-    legp->Draw();
+    leg->Draw();
     
     //save pulls plot
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
@@ -717,7 +755,7 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\Upsilon(1S)}", "\\beta", "\\rho", "\\delta", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "\\rho", "\\delta", "f_{\\beta=2}", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -727,23 +765,15 @@ public:
     tex << "\\begin{tabular}{c|c|c}" << endl;
     tex << "Parameter & Value & Uncertainty \\\\" << endl;
     tex << "\\hline" << endl;
-    for(int i = 0; i < nparam[0]; i++) {
+    for(int i = 0; i < npartot; i++) {
       tex << "$" << names[i] << "$ & ";
-      tex << fitpar[i] << " & ";
-      if(efitpar[i] == 0) tex << "fixed \\\\" << endl;
-      else tex << efitpar[i] << " \\\\" << endl;
-    }
-    for(int i = 0; i < nparam[1]; i++) {
-      tex << "$" << names[i+nparam[0]] << "$ & ";
-      tex << fitpar[i+nparam[0]] << " & ";
-      if(efitpar[i+nparam[0]] == 0) tex << "fixed \\\\" << endl;
-      else tex << efitpar[i+nparam[0]] << " \\\\" << endl;
-    }
-    for(int i = 0; i < nparam[2]; i++) {
-      tex << "$" << names[i+nparam[0]+nparam[1]] << "$ & ";
-      tex << fitpar[i+nparam[0]+nparam[1]] << " & ";
-      if(efitpar[i+nparam[0]+nparam[1]] == 0) tex << "fixed \\\\" << endl;
-      else tex << efitpar[i+nparam[0]+nparam[1]] << " \\\\" << endl;
+      int p_norm = 1.; 
+      if(efitpar[i] > 0 && efitpar[i] < 1)
+	p_norm = ceil(-log10(efitpar[i]))+1;	
+      tex << setprecision(p_norm) << fixed << fitpar[i] << " & ";
+      if(efitpar[i] > 0) tex << efitpar[i];
+      else tex << "fixed";
+      tex << " \\\\" << endl;
     }
     tex << "min $p_T/M$ & " << ptmmin << " & fixed \\\\" << endl;
     tex << "\\end{tabular}" << endl;
