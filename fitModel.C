@@ -198,12 +198,6 @@ public:
       }
       file.close();
     }
-    for(int i = 0; i < (int)datasigma[0].size(); i++) {
-      for(int j = 0; j < 11; j++) {
-	cout << datasigma[j][i] << " ";
-      }
-      cout << endl;
-    }
   }
   
   //method to read the types and initializations of each fit parameter from file
@@ -284,7 +278,6 @@ public:
     }
     cs/=(nsteps);
 
-    //cout << auxnames[1][datasigma[10][i]] << " " << datasigma[4][i] << " " << datasigma[2][i] << " " << cs << endl;
     return cs;
   }
   
@@ -378,13 +371,15 @@ public:
       string sName = parseString(norm[i].name, "_")[1];
       L_est[i] = lest(sName);
     }
-    //    for(int i = 1; i < nparam[0]; i++) L_est[i] = 1.;
 
     // initialize norm parameters
     for(int i = 0; i < nparam[0]; i++) {
       strcpy(char_array, norm[i].name.c_str());
       fit->SetParameter(i, char_array, L_est[i]*norm[i].mult, L_est[i]*norm[i].mult/10, 0, 0);
-      if(norm[i].fix == 1) fit->FixParameter(i);
+      if(norm[i].fix == 1) {
+	fit->SetParameter(i, char_array, 1, 0.1, 0, 0);
+	fit->FixParameter(i);
+      }
     }
     // initialize shape parameters
     for(int i = 0; i < nparam[1]; i++) {
@@ -402,8 +397,7 @@ public:
     }
 
     fit->ExecuteCommand("MIGRAD",0,0);
-    //fit->ExecuteCommand("MIGRAD",0,0);
-
+ 
     fitpar.resize(npartot);
     efitpar.resize(npartot);
     for(int i = 0; i < npartot; i++) {
@@ -673,7 +667,6 @@ public:
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
-	//savename = auxnames[0][sets[i]]+" "+QName[auxnames[1][sets[i]]]+" "+auxnames[2][sets[i]];
 	savename = Form("%.1f < y < %.1f", datasigma[1][counter], datasigma[2][counter]);
 	const char *st = savename.c_str();
 	leg->AddEntry(gd[i], st, "pl");
@@ -755,7 +748,7 @@ fp->SetXTitle("p_{T}/M");
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "\\rho", "\\delta", "f_{\\beta=2}", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
+    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "L_{\\Upsilon(1S)}", "L_{\\Upsilon(2S)}", "L_{\\Upsilon(3S)}", "\\rho", "\\delta", "f_{\\beta=2}", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");

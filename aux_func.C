@@ -217,6 +217,14 @@ void aRange(string det, string state, double *apos) {
     apos[1] = 1.01e-3;
     apos[2] = 8.9;
   }
+  else if (det == "CMS"){
+    apos[1] = 1.01e-4;
+    apos[2] = 13.9;
+  }
+  else if (det == "LHCb"){
+    apos[1] = 1.01e-2;
+    apos[2] = 5.9;
+  }
 }
 
 // get relative position on an axis (pi, pf)
