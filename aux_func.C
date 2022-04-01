@@ -167,7 +167,7 @@ double sigplot(double sqs_M, double xi, double y, double L, double M, double bet
 
 //calculates the average pT/M of a bin by weighing it with the model cs
 //uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
-double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par)
+double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par, double fbeta)
 {
   double uint = 0, lint = 0, dpt = ubound-lbound, dy = uybound-lybound;
   int npt = 8, ny = 4;
@@ -176,8 +176,13 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
     par[1] = lbound + xpt*dpt/(npt-1.)+1e-10;
     for(int xy = 0; xy < ny; xy++) {
       par[2] = lybound + xy*dy/(ny-1.);
-      uint += sig(par)*par[1];
-      lint += sig(par);
+      par[5] = 2.;
+      double sig2 = sig(par);
+      par[5] = 3;
+      double sig3 = sig(par);
+      double sig_f = fbeta*sig2 + (1.-fbeta)*sig3;
+      uint += sig_f*par[1];
+      lint += sig_f;
     }
   }
   return uint / lint;
@@ -200,30 +205,35 @@ int getCol(int i_set) {
 // define plot range depending on data label
 void aRange(string det, string state, double *apos) {
   apos[0] = -1;
-  apos[3] = 9.99e3;
   if(det == "CMS" && state == "jpsi") {
     apos[1] = 1.01e-5;
     apos[2] = 39.9;
+    apos[3] = 9.99e1;
   }
   else if(det == "LHCb" && state == "jpsi"){
     apos[1] = 1.01e-1;
     apos[2] = 7.9;
+    apos[3] = 9.99e3;
   }
   else if (det == "CMS" && state == "psi2"){
     apos[1] = 1.01e-4;
     apos[2] = 29.9;
+    apos[3] = 9.99e1;
   }
   else if (det == "LHCb" && state == "psi2"){
     apos[1] = 1.01e-3;
     apos[2] = 8.9;
+    apos[3] = 9.99e3;
   }
   else if (det == "CMS"){
     apos[1] = 1.01e-4;
     apos[2] = 13.9;
+    apos[3] = 9.99e1;
   }
   else if (det == "LHCb"){
     apos[1] = 1.01e-2;
     apos[2] = 5.9;
+    apos[3] = 9.99e2;
   }
 }
 

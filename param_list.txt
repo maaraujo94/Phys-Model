@@ -1,13 +1,12 @@
-norm L_jpsi 1e-2 1
-norm L_psi2 1e-2 1
-norm L_ups1 1e1 1
-norm L_ups2 1e1 1
+norm L_jpsi 1e-2 0
+norm L_psi2 1e-2 0
+norm L_ups1 1e1 0
+norm L_ups2 1e1 0
 norm L_ups3 1e1 0
 shape rho 2. 0.25 1
 shape delta 0. 0.5 1
-shape f_beta 0.1 0.01 0
-nuis L_CMS_7 2.2e-2 1
-nuis L_CMS_13 2.3e-2 1
-nuis L_LHCb_7_jpsi 3.5e-2 1
-nuis L_LHCb_7 1.7e-2 1
-nuis L_LHCb_13 3.9e-2 1
+nuis L_CMS_7 2.2e-2 0
+nuis L_CMS_13 2.3e-2 0
+nuis L_LHCb_7_jpsi 3.5e-2 0
+nuis L_LHCb_7 1.7e-2 0
+nuis L_LHCb_13 3.9e-2 0

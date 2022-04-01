@@ -28,16 +28,18 @@ public:
   // determined pre-fit but used onwards
 
   // n_states: number of states in the fit
-  // nparam: number of params of each type (norm, shape, nuis)
+  // nparam: number of params of each type (norm, shape, nuis + fbeta)
   // n_pts: nr of data pts for each dataID
   // *_att: norm and nuis params to be multiplied to get value for each dataID
   // datasigma: storage of all (quantitative) info of each state
   // auxnames: strings needed for legends and savenames
-  int n_states, nparam[3] = {0};
+  // state_id: map to determine which f_beta to use
+  int n_states, nparam[4] = {0};
   vector <int> n_pts;
   vector <vector <int> > norm_att, nuis_att;
   vector <vector <double> > datasigma;
   vector <vector <string> > auxnames;
+  map<int, string> state_id;
 
   // determined on fitting step
 
@@ -128,10 +130,11 @@ public:
     string data;
     ifstream file;
     double nums[12];
+    int i_state = 0;
     double aux, mass, sqrts;
     vector <string> saux;
     // can't do datasigma size at initialization bc class reads it as a method
-    datasigma.resize(11);
+    datasigma.resize(12);
 
     // vector of strings for legends and savenames
     auxnames.resize(3);
@@ -146,7 +149,16 @@ public:
       auxnames[0].push_back(saux[0]);
       auxnames[1].push_back(saux[1]);
       auxnames[2].push_back(parseString(saux[saux.size()-1], ".")[0]);
-      
+
+      // fill the state <-> id map (for f_beta)
+      if(id == 0) 
+	state_id[i_state] = auxnames[1][id];
+      else if(auxnames[1][id] != auxnames[1][id-1]) {
+	i_state++;
+	state_id[i_state] = auxnames[1][id];
+      }
+
+      // read each file, if flagged for reading
       if(read_flag[id]) file.open(statename[id]);
       if(file.is_open()) {
 	saux = parseString(statename[id], "/");
@@ -163,7 +175,7 @@ public:
 	// position code:
 	/* [0] = mass, [1] = yi, [2] = yf, [3] = pT/M, [4] = pTi/M, [5] = pTf/M
 	   [6] = sigma*mass/norm, [7] = e(sigma), [8] = K(pol), [9] = sqrt(s)
-	   [10] = stateid 	 */
+	   [10] = stateid, [11] = Q state id for f_beta	 */
 
 	for(int j = 0; j < n_pts[id]; j++) {
 	  for(int i = 0; i < 12; i++) {
@@ -193,7 +205,7 @@ public:
 	  datasigma[8].push_back(nums[10]/nums[11]-1);
 	  datasigma[9].push_back(sqrts);
 	  datasigma[10].push_back(id);
-
+	  datasigma[11].push_back(i_state);
 	}
       }
       file.close();
@@ -215,6 +227,7 @@ public:
 	if (names[i].compare(aux[0])==0) 
 	  nparam[i]++;
     }
+    nparam[3] = state_id.size();
     norm.resize(nparam[0]);
     shape.resize(nparam[1]); 
     nuis.resize(nparam[2]);
@@ -284,7 +297,7 @@ public:
   // fit function
   double myFunction(double *par) {
     //first calculate const normalization
-    int len = nparam[1] -1 + 6;
+    int len = nparam[1] + 6;
     sigpar.resize(len);
 
     for(int i = 0; i < len; i++) {
@@ -292,9 +305,8 @@ public:
       else sigpar[i] = par[i-6+nparam[0]];
     }
 
-    double pred, chisq, sum = 0, ratio, lumibr;
+    double pred, chisq, sum = 0, ratio, lumibr, fbeta;
     int counter = 0;
-    double fbeta = par[nparam[0]+nparam[1]-1];
 
     // run over all pts and get chisquare
     for(int id = 0; id < n_states; id++) {
@@ -308,9 +320,10 @@ public:
       for(int i = 0; i < nuis_att[id].size(); i++)
 	lumibr *= par[nuis_att[id][i]+nparam[0]+nparam[1]];
       
-      //for each state, assign sqrt(s)/M, M 
+      //for each state, assign sqrt(s)/M, M, fbeta
       sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
       sigpar[4] = datasigma[0][counter];
+      fbeta = par[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]];
 
       //cycle over each point in the state
       for(int n = 0; n < n_pts[id]; n++)
@@ -358,7 +371,7 @@ public:
   
   // method that initializes and runs the fitting
   void doFit() {
-    int npartot = nparam[0]+nparam[1]+nparam[2], aux_int = 0;
+    int npartot = nparam[0]+nparam[1]+nparam[2]+nparam[3], aux_int = 0;
     char char_array[100];
 
     //define TFitter
@@ -394,6 +407,21 @@ public:
       fit->SetParameter(i+nparam[0]+nparam[1], char_array, 1, 0.1, 0, 0);
       if(nuis[i].fix == 1) fit->FixParameter(i+nparam[0]+nparam[1]);
       else aux_int++;
+    }
+    // initialize fbeta parameters
+    for(int i = 0; i < nparam[3]; i++) {
+      if(i < 2)
+	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.02, 0.01, 0, 0);
+      else
+	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.1, 0.05, 0, 0);
+      int lds = datasigma[0].size(), c_fix = 1;
+      for(int i_ds = 0; i_ds < lds; i_ds++) {
+	if(datasigma[11][i_ds] == i) {
+	  c_fix = 0;
+	  break;
+	}
+      }
+      if(c_fix == 1) fit->FixParameter(i+nparam[0]+nparam[1]+nparam[2]);
     }
 
     fit->ExecuteCommand("MIGRAD",0,0);
@@ -442,7 +470,7 @@ public:
   void readRes() {
     ifstream fin;
     string data;
-    int npartot = nparam[0]+nparam[1]+nparam[2];
+    int npartot = nparam[0]+nparam[1]+nparam[2]+nparam[3];
 
     // read fit results and fill (e)fitpar vectors
     fitpar.resize(npartot);
@@ -458,9 +486,9 @@ public:
     double pred, chisq, sum = 0, ratio, lumibr;
 
     // resize sigpar and fill it appropriately
-    int len = nparam[1] -1 + 6;
+    int len = nparam[1] + 6;
     sigpar.resize(len);
-
+    
     for(int i = 6; i < len; i++)
       sigpar[i] = fitpar[i-6+nparam[0]];
   }
@@ -477,7 +505,7 @@ public:
    
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetLogy();
-    TH1F *fc = c->DrawFrame(posif[0], posif[1], posif[2], posif[3]);
+    TH1F *fc = c->DrawFrame(posif[0], posif[1]*pow(10,-nsets), posif[2], posif[3]);
     fc->SetXTitle("p_{T}/M");
     fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
     fc->GetYaxis()->SetTitleOffset(1);
@@ -563,7 +591,7 @@ public:
     // plotting starts here
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetLogy();
-    TH1F *fc = c->DrawFrame(posif[0], posif[1], posif[2], posif[3]);
+    TH1F *fc = c->DrawFrame(posif[0], posif[1]*pow(10,-(nsets-1)), posif[2], posif[3]);
     fc->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
     fc->SetXTitle("p_{T}/M");
     fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
@@ -574,6 +602,7 @@ public:
     // define data graphs and fit functions
     TGraphAsymmErrors **gd = new TGraphAsymmErrors*[nsets];
     TGraphAsymmErrors **gp = new TGraphAsymmErrors*[nsets];
+    TGraphAsymmErrors **gdev = new TGraphAsymmErrors*[nsets];
     TF1 **f = new TF1*[nsets];
     
     //cycle over all states
@@ -594,20 +623,23 @@ public:
 	
 	float datapts[5][n_pts[id]];
 	float pullpts[2][n_pts[id]];
+	float devpts[2][n_pts[id]];
 	
 	// cycle over all points of [id]-state, to plot data and later pulls
 	for(int j = 0; j < n_pts[id]; j++) {
 	  // filling arrays for data plotting
-	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
+	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
 	  datapts[1][j] = datasigma[6][j+counter]*lumibr;
 	  datapts[2][j] = datasigma[7][j+counter]*lumibr;
 	  datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
 	  datapts[4][j] = datasigma[5][j+counter] - datapts[0][j];
 	  
 	  // filling arrays for pulls plotting
-	  cs = csCalc(j+counter, fitpar[nparam[0]+nparam[1]-1]);
+	  cs = csCalc(j+counter, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
 	  pullpts[0][j] = (datapts[1][j] - cs) / datapts[2][j];
 	  pullpts[1][j] = 0.;
+	  devpts[0][j] = (datapts[1][j] - cs) / cs;
+	  devpts[1][j] = 0.;
 	}
 	
 	mkrStyle = getStyle(auxnames[0][id]);
@@ -618,6 +650,11 @@ public:
 	gd[i_set]->SetMarkerColor(getCol(i_set));
 	gd[i_set]->SetMarkerStyle(mkrStyle);
 	gd[i_set]->SetMarkerSize(.75);
+	for(int i_pt = 0; i_pt < n_pts[id]; i_pt++) {
+	  gd[i_set]->GetY()[i_pt] *= pow(10,-i_set);
+	  gd[i_set]->GetEYhigh()[i_pt] *= pow(10,-i_set);	
+	  gd[i_set]->GetEYlow()[i_pt] *= pow(10,-i_set);
+	}
 	gd[i_set]->Draw("P");
 	
 	// pulls plots defined (but not drawn)
@@ -631,6 +668,15 @@ public:
 	  if(datapts[0][i_data] < ptmmin)
 	    gp[i_set]->RemovePoint(0);
 	
+	gdev[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], devpts[0], datapts[3], datapts[4], devpts[1], devpts[1]);
+	gdev[i_set]->SetLineColor(getCol(i_set));
+	gdev[i_set]->SetMarkerColor(getCol(i_set));
+	gdev[i_set]->SetMarkerStyle(mkrStyle);
+	gdev[i_set]->SetMarkerSize(.75);
+	for(int i_data = 0; i_data < n_pts[id]; i_data++)
+	  if(datapts[0][i_data] < ptmmin)
+	    gdev[i_set]->RemovePoint(0);
+
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
 	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], 2, [5], [6]) + (1.-[4])*sigplot([0], x, [1], [2], [3], 3, [5], [6])", ptmmin, 49.9);
@@ -641,7 +687,8 @@ public:
 	  f[i_set]->SetParameter(1, datasigma[2][counter]/2);
 	for(int j = 2; j < 7; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
-	f[i_set]->SetParameter(4, fitpar[nparam[0]+nparam[1]-1]);
+	f[i_set]->SetParameter(4, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]]);
+	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
 	f[i_set]->SetLineColor(getCol(i_set));
 	f[i_set]->Draw("lsame");
 	
@@ -651,12 +698,11 @@ public:
     
     // text on the plot
     TLatex lc;
-    double xpos = getPos(posif[0], posif[2], 0.675, 0);
+    double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
-    xpos = getPos(posif[0], posif[2], 1./20, 0);
-    lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     
     // draw legend
     counter = 0;
@@ -685,7 +731,7 @@ public:
     
     TH1F *fp = c->DrawFrame(posif[0], -9, posif[2], 9);
     fp->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
-fp->SetXTitle("p_{T}/M");
+    fp->SetXTitle("p_{T}/M");
     fp->SetYTitle("pulls");
     fp->GetYaxis()->SetTitleOffset(1);
     c->Modified();
@@ -718,7 +764,7 @@ fp->SetXTitle("p_{T}/M");
     //draw pulls
     for(int i = 0; i < nsets; i++) {
       if( n_pts[sets[i]] > 0)
-	gp[i]->Draw("P"); 
+	gp[i]->Draw("P");
     }
 
     //text on the plot
@@ -735,20 +781,73 @@ fp->SetXTitle("p_{T}/M");
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
     const char* savep = savename.c_str();
     c->SaveAs(savep);
+
+    // redo plotting for relative deviation
+    c->Clear();
     
+    TH1F *fdev = c->DrawFrame(posif[0], -1., posif[2], 1.);
+    fdev->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
+    fdev->SetXTitle("p_{T}/M");
+    fdev->SetYTitle("rel. diff.");
+    fdev->GetYaxis()->SetTitleOffset(1);
+    c->Modified();
+    c->SetTitle("");
+    
+    //plot line at zero
+    zero->Draw("lsame");
+
+    /*    TLine *dlim1 = new TLine(posif[0], -5, posif[2], -5);
+    dlim1->SetLineStyle(kDotted);
+    dlim1->Draw("lsame");
+    TLine *dlim2 = new TLine(posif[0], -3, posif[2], -3);
+    dlim2->SetLineStyle(kDotted);
+    dlim2->Draw("lsame");
+    TLine *dlim3 = new TLine(posif[0], 3, posif[2], 3);
+    dlim3->SetLineStyle(kDotted);
+    dlim3->Draw("lsame");
+    TLine *dlim4 = new TLine(posif[0], 5, posif[2], 5);
+    dlim4->SetLineStyle(kDotted);
+    dlim4->Draw("lsame");*/
+
+    // plot pt/M cutoff
+    TLine *ptmd = new TLine(ptmmin, -1, ptmmin, 1);
+    ptmd->SetLineStyle(7);
+    ptmd->Draw("lsame");
+  
+    //draw pulls
+    for(int i = 0; i < nsets; i++) {
+      if( n_pts[sets[i]] > 0)
+	gdev[i]->Draw("P");
+    }
+
+    //text on the plot
+    TLatex ld;
+    ld.SetTextSize(0.03);
+    ld.DrawLatex(xpos, getPos(1, -1, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
+    ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    ld.DrawLatex(xpos, getPos(-1, 1, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
+    
+    //draw legend
+    leg->Draw();
+    
+    //save pulls plot
+    savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs_devs.pdf";
+    const char* saved = savename.c_str();
+    c->SaveAs(saved);
+
     c->Destructor();
   }
   
   //method that does the plotting
   void doPlot(const char* state_div) {
     gROOT->SetBatch();
-    
+
     ifstream fin;
     ofstream tex;
     int nsets, nval;
 
-    int npartot = nparam[0]+nparam[1]+nparam[2];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "L_{\\Upsilon(1S)}", "L_{\\Upsilon(2S)}", "L_{\\Upsilon(3S)}", "\\rho", "\\delta", "f_{\\beta=2}", "BR_{jpsidm}", "BR_{ups1dm}", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}"};
+    int npartot = nparam[0]+nparam[1]+nparam[2]+nparam[3];
+    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "L_{\\Upsilon(1S)}", "L_{\\Upsilon(2S)}", "L_{\\Upsilon(3S)}", "\\rho", "\\delta", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J/\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}", "f_{\\beta=2,J/\\psi}", "f_{\\beta=2,\\psi(2S)}", "f_{\\beta=2,\\Upsilon(1S)}", "f_{\\beta=2,\\Upsilon(2S)}", "f_{\\beta=2,\\Upsilon(3S)}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -770,10 +869,10 @@ fp->SetXTitle("p_{T}/M");
     }
     tex << "min $p_T/M$ & " << ptmmin << " & fixed \\\\" << endl;
     tex << "\\end{tabular}" << endl;
-    tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << chisquare << " / " << ndf << " = " << chisquare/ndf << ")}" << endl;
+    tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << setprecision(1) << fixed << chisquare << " / " << ndf << " = " << chisquare/ndf << ")}" << endl;
     tex << "\\end{table}" << endl;
     tex.close();
-    
+
     // cycle over each line of the plotting division file
     fin.open(state_div);
     while(1) {

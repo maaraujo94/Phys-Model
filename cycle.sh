@@ -7,7 +7,7 @@
 
 # 1) call shell command to fit, get plots, then save everything in a folder
 
-echo "doing fit before plotting"
+echo "doing plotting"
 com="c_test.C(1)"
 
 root -l <<EOF
@@ -16,7 +16,6 @@ gSystem->Load("/home/mariana/local/lib/libLHAPDF.so");
 .x $com
 .q
 EOF
-#root -l -q $com > log_root
 
 cd plots
 echo "now in plots directory"
@@ -24,12 +23,8 @@ pdflatex plot.tex > res.txt
 rm res.txt
 cd ..
 
-#rm -r fit_res
-#mkdir fit_res
-
 cp fit.txt fit_res/
 cp -r plots fit_res/
-#cp log_root fit_res/
 
 # 2) call shell command to run fit over several values of a parameter
 <<COMM

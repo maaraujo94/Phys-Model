@@ -23,7 +23,7 @@ void c_test(int tofit)
   // note that the FitModel class has been initialized in fitModel.C and only has to be called here
   fitclass.getDataList(input_list);
   fitclass.getData();
-
+  
   fitclass.getParams(param_list);
   fitclass.getParMethod(method_list);
   
