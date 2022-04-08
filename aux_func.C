@@ -235,6 +235,21 @@ void aRange(string det, string state, double *apos) {
     apos[2] = 5.9;
     apos[3] = 9.99e2;
   }
+  else if (det == "ATLAS" && (state == "chic1" or state == "chic2")){
+    apos[1] = 1.01e-1;
+    apos[2] = 9.9;
+    apos[3] = 9.99e2;
+  }
+  else if (det == "ATLAS" && state == "psi2") {
+    apos[1] = 1.01e-5;
+    apos[2] = 29.9;
+    apos[3] = 9.99e2;
+  }
+  else if (det == "ATLAS") {
+    apos[1] = 1.01e-4;
+    apos[2] = 13.9;
+    apos[3] = 9.99e1;
+  }
 }
 
 // get relative position on an axis (pi, pf)

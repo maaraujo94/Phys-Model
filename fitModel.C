@@ -164,7 +164,7 @@ public:
 	saux = parseString(statename[id], "/");
 	saux = parseString(saux[saux.size()-1], "_");
 	mass = QMass[saux[1]];
-	sqrts = stof(saux[2])*1000;
+	sqrts = stof(saux[2])*1000; // ONLY WORKS FOR INTEGER SQRT(S)
 
 	// get nr of pts for each stateid
 	while(getline(file,data)) n_pts[id]+=1;
@@ -410,10 +410,10 @@ public:
     }
     // initialize fbeta parameters
     for(int i = 0; i < nparam[3]; i++) {
-      if(i < 2)
-	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.02, 0.01, 0, 0);
-      else
+      if(i < 4)
 	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.1, 0.05, 0, 0);
+      else
+	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.3, 0.1, 0, 0);
       int lds = datasigma[0].size(), c_fix = 1;
       for(int i_ds = 0; i_ds < lds; i_ds++) {
 	if(datasigma[11][i_ds] == i) {
@@ -592,7 +592,7 @@ public:
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetLogy();
     TH1F *fc = c->DrawFrame(posif[0], posif[1]*pow(10,-(nsets-1)), posif[2], posif[3]);
-    fc->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
+    fc->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[0]]].c_str()));
     fc->SetXTitle("p_{T}/M");
     fc->SetYTitle("d#sigma / d#xidy (nb/GeV)");
     fc->GetYaxis()->SetTitleOffset(1);
@@ -640,6 +640,7 @@ public:
 	  pullpts[1][j] = 0.;
 	  devpts[0][j] = (datapts[1][j] - cs) / cs;
 	  devpts[1][j] = 0.;
+
 	}
 	
 	mkrStyle = getStyle(auxnames[0][id]);
@@ -730,7 +731,7 @@ public:
     c->SetLogy(0);
     
     TH1F *fp = c->DrawFrame(posif[0], -9, posif[2], 9);
-    fp->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
+    fp->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[0]]].c_str()));
     fp->SetXTitle("p_{T}/M");
     fp->SetYTitle("pulls");
     fp->GetYaxis()->SetTitleOffset(1);
@@ -786,7 +787,7 @@ public:
     c->Clear();
     
     TH1F *fdev = c->DrawFrame(posif[0], -1., posif[2], 1.);
-    fdev->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[1]]].c_str()));
+    fdev->SetTitle(Form("%s %s", auxnames[0][sets[0]].c_str(), QName[auxnames[1][sets[0]]].c_str()));
     fdev->SetXTitle("p_{T}/M");
     fdev->SetYTitle("rel. diff.");
     fdev->GetYaxis()->SetTitleOffset(1);
@@ -847,7 +848,35 @@ public:
     int nsets, nval;
 
     int npartot = nparam[0]+nparam[1]+nparam[2]+nparam[3];
-    vector <string> names = {"L_{J/\\psi}", "L_{\\psi(2S)}", "L_{\\Upsilon(1S)}", "L_{\\Upsilon(2S)}", "L_{\\Upsilon(3S)}", "\\rho", "\\delta", "\\mathcal L_{CMS,7}", "\\mathcal L_{CMS,13}", "\\mathcal L_{LHCb,7}(J/\\psi)", "\\mathcal L_{LHCb,7}", "\\mathcal L_{LHCb,13}", "f_{\\beta=2,J/\\psi}", "f_{\\beta=2,\\psi(2S)}", "f_{\\beta=2,\\Upsilon(1S)}", "f_{\\beta=2,\\Upsilon(2S)}", "f_{\\beta=2,\\Upsilon(3S)}"};
+    vector <string> names = {"L_{J/\\psi}",
+			     "L_{\\chi_{c1}}",
+			     "L_{\\chi_{c2}}",
+			     "L_{\\psi(2S)}",
+			     "L_{\\Upsilon(1S)}",
+			     "L_{\\Upsilon(2S)}",
+			     "L_{\\Upsilon(3S)}",
+			     "\\rho",
+			     "\\delta",
+			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
+			     "BR(\\chi_{c1}\\rightarrow J/\\psi\\gamma)",
+			     "BR(\\chi_{c2}\\rightarrow J/\\psi\\gamma)",
+			     "BR(\\psi(2S)\\rightarrow\\mu^+\\mu^-)",
+			     "BR(\\psi(2S)\\rightarrow J/\\psi\\pi^+\\pi^-)",
+			     "\\mathcal L_{ATLAS,7}(c\\overline c)",
+			     "\\mathcal L_{ATLAS,7}(b\\overline b)",
+			     "\\mathcal L_{CMS,7}",
+			     "\\mathcal L_{CMS,13}",
+			     "\\mathcal L_{LHCb,7}(J/\\psi)",
+			     "\\mathcal L_{LHCb,7}",
+			     "\\mathcal L_{LHCb,8}",
+			     "\\mathcal L_{LHCb,13}",
+			     "f_{\\beta=2,J/\\psi}",
+			     "f_{\\beta=2,\\chi_{c1}}",
+			     "f_{\\beta=2,\\chi_{c2}}",
+			     "f_{\\beta=2,\\psi(2S)}",
+			     "f_{\\beta=2,\\Upsilon(1S)}",
+			     "f_{\\beta=2,\\Upsilon(2S)}",
+			     "f_{\\beta=2,\\Upsilon(3S)}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
