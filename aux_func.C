@@ -203,24 +203,34 @@ int getCol(int i_set) {
 }
 
 // define plot range depending on data label
-void aRange(string det, string state, double *apos) {
+void aRange(string det, string state, double sqrts, double *apos) {
   apos[0] = -1;
-  if(det == "CMS" && state == "jpsi") {
+  if(det == "CMS" && state == "jpsi" && sqrts > 6000) {
     apos[1] = 1.01e-5;
     apos[2] = 39.9;
     apos[3] = 9.99e1;
+  }
+  else if(det == "CMS" && state == "jpsi") {
+    apos[1] = 1.01e-3;
+    apos[2] = 9.9;
+    apos[3] = 9.99e0;
   }
   else if(det == "LHCb" && state == "jpsi"){
     apos[1] = 1.01e-1;
     apos[2] = 7.9;
     apos[3] = 9.99e3;
   }
-  else if (det == "CMS" && state == "psi2"){
+  else if (det == "CMS" && state == "psi2" && sqrts > 6000){
     apos[1] = 1.01e-4;
     apos[2] = 29.9;
     apos[3] = 9.99e1;
+  } 
+  else if (det == "CMS" && state == "psi2"){
+    apos[1] = 1.01e-1;
+    apos[2] = 8.9;
+    apos[3] = 9.99e1;
   }
-  else if (det == "LHCb" && state == "psi2"){
+    else if (det == "LHCb" && state == "psi2"){
     apos[1] = 1.01e-3;
     apos[2] = 8.9;
     apos[3] = 9.99e3;

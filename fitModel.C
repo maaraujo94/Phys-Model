@@ -157,18 +157,23 @@ public:
 	i_state++;
 	state_id[i_state] = auxnames[1][id];
       }
-
+      
       // read each file, if flagged for reading
       if(read_flag[id]) file.open(statename[id]);
       if(file.is_open()) {
 	saux = parseString(statename[id], "/");
 	saux = parseString(saux[saux.size()-1], "_");
 	mass = QMass[saux[1]];
-	sqrts = stof(saux[2])*1000; // ONLY WORKS FOR INTEGER SQRT(S)
 
+	// getting sqrt(s) and possible decimals
+	saux = parseString(saux[2], "p");
+	sqrts = stof(saux[0])*1000;
+	if(saux.size() > 1)
+	  sqrts += stof(saux[1])*pow(10,3-saux[1].size());
+	
 	// get nr of pts for each stateid
 	while(getline(file,data)) n_pts[id]+=1;
-	
+
 	file.clear();
 	file.seekg(0);
 	// save info for each stateid
@@ -381,8 +386,12 @@ public:
     // initialize normalizations
     double L_est[nparam[0]];
     for(int i = 0; i < nparam[0]; i++) {
-      string sName = parseString(norm[i].name, "_")[1];
-      L_est[i] = lest(sName);
+      if(i < n_states) {
+	string sName = parseString(norm[i].name, "_")[1];
+	L_est[i] = lest(sName);
+      }
+      else
+	L_est[i] = 1.;
     }
 
     // initialize norm parameters
@@ -497,12 +506,16 @@ public:
     string savename;
 
     double posif[4];
-    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], posif);
 
     vector <string> saux = parseString(statename[sets[0]], "/");
-    saux = parseString(saux[saux.size()-1], "_");
-    double sqrts = stof(saux[2]);
-   
+    saux = parseString(saux[saux.size()-1], "_"); 
+    saux = parseString(saux[2], "p");
+    double sqrts = stof(saux[0]);
+    if(saux.size() > 1)
+      sqrts += stof(saux[1])*pow(10,-saux[1].size());
+
+    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], sqrts, posif);
+
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetLogy();
     TH1F *fc = c->DrawFrame(posif[0], posif[1]*pow(10,-nsets), posif[2], posif[3]);
@@ -583,10 +596,10 @@ public:
 
     // attribute axis range based on dataset
     double posif[4];
-    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], posif);
     
     //get point of datasigma where current datasets start
     for(int i = 0; i < sets[0]; i++) counter += n_pts[i];
+    aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], datasigma[9][counter], posif);
 
     // plotting starts here
     TCanvas *c = new TCanvas("title", "name", 700, 700);
@@ -640,6 +653,8 @@ public:
 	  pullpts[1][j] = 0.;
 	  devpts[0][j] = (datapts[1][j] - cs) / cs;
 	  devpts[1][j] = 0.;
+
+	  }
 
 	}
 	
@@ -714,7 +729,7 @@ public:
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
-	savename = Form("%.1f < y < %.1f", datasigma[1][counter], datasigma[2][counter]);
+	savename = Form("%.2f < y < %.2f", datasigma[1][counter], datasigma[2][counter]);
 	const char *st = savename.c_str();
 	leg->AddEntry(gd[i], st, "pl");
 	counter += n_pts[sets[i]];
@@ -855,6 +870,7 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
+			     "L_{CMS,5.02}",
 			     "\\rho",
 			     "\\delta",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
@@ -864,6 +880,7 @@ public:
 			     "BR(\\psi(2S)\\rightarrow J/\\psi\\pi^+\\pi^-)",
 			     "\\mathcal L_{ATLAS,7}(c\\overline c)",
 			     "\\mathcal L_{ATLAS,7}(b\\overline b)",
+			     "\\mathcal L_{CMS,5.02}",
 			     "\\mathcal L_{CMS,7}",
 			     "\\mathcal L_{CMS,13}",
 			     "\\mathcal L_{LHCb,7}(J/\\psi)",
