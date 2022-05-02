@@ -386,7 +386,7 @@ public:
     // initialize normalizations
     double L_est[nparam[0]];
     for(int i = 0; i < nparam[0]; i++) {
-      if(i < n_states) {
+      if(i < datasigma[11][datasigma[11].size()-1]) {
 	string sName = parseString(norm[i].name, "_")[1];
 	L_est[i] = lest(sName);
       }
@@ -653,9 +653,6 @@ public:
 	  pullpts[1][j] = 0.;
 	  devpts[0][j] = (datapts[1][j] - cs) / cs;
 	  devpts[1][j] = 0.;
-
-	  }
-
 	}
 	
 	mkrStyle = getStyle(auxnames[0][id]);
@@ -813,17 +810,17 @@ public:
     zero->Draw("lsame");
 
     /*    TLine *dlim1 = new TLine(posif[0], -5, posif[2], -5);
-    dlim1->SetLineStyle(kDotted);
-    dlim1->Draw("lsame");
-    TLine *dlim2 = new TLine(posif[0], -3, posif[2], -3);
-    dlim2->SetLineStyle(kDotted);
-    dlim2->Draw("lsame");
-    TLine *dlim3 = new TLine(posif[0], 3, posif[2], 3);
-    dlim3->SetLineStyle(kDotted);
-    dlim3->Draw("lsame");
-    TLine *dlim4 = new TLine(posif[0], 5, posif[2], 5);
-    dlim4->SetLineStyle(kDotted);
-    dlim4->Draw("lsame");*/
+	  dlim1->SetLineStyle(kDotted);
+	  dlim1->Draw("lsame");
+	  TLine *dlim2 = new TLine(posif[0], -3, posif[2], -3);
+	  dlim2->SetLineStyle(kDotted);
+	  dlim2->Draw("lsame");
+	  TLine *dlim3 = new TLine(posif[0], 3, posif[2], 3);
+	  dlim3->SetLineStyle(kDotted);
+	  dlim3->Draw("lsame");
+	  TLine *dlim4 = new TLine(posif[0], 5, posif[2], 5);
+	  dlim4->SetLineStyle(kDotted);
+	  dlim4->Draw("lsame");*/
 
     // plot pt/M cutoff
     TLine *ptmd = new TLine(ptmmin, -1, ptmmin, 1);
@@ -870,7 +867,8 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
-			     "L_{CMS,5.02}",
+			     "L_{J/\\psi,5.02}",
+			     "L_{\\psi(2S),5.02}",
 			     "\\rho",
 			     "\\delta",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",

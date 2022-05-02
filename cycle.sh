@@ -7,7 +7,7 @@
 
 # 1) call shell command to fit, get plots, then save everything in a folder
 
-echo "doing plotting"
+echo "doing fitting"
 com="c_test.C(0)"
 
 root -l <<EOF

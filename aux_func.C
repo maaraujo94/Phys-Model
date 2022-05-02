@@ -115,7 +115,10 @@ double integf(double *par)
   double fx2 = pdf_new(x2, s_hat, s);
 
   //the dsigma/dt^star function multiplied by mass-normalized jacobian
-  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]);
+  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the E format
+  //double gfunc = ( pow( sqstar+2.*pstar*par[3], -par[6] ) + pow( sqstar-2.*pstar*par[3], -par[6] ) ) * ( pow( sqstar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the s format
+  //double kappa = 1;
+  //double gfunc = ( pow( 1. + pow(sqstar,-kappa) + par[3], -par[6] ) + pow( 1. +pow(sqstar,-kappa) - par[3], -par[6] ) ) * ( pow( 1 + pow(sqstar,-kappa), par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the kappa format
   double hfunc = pow(sstar, -par[5]);
  
   double dsdt = gfunc * hfunc;
@@ -148,8 +151,11 @@ double sig(vector <double> par)
   double eNorm = (sNorm+1)/(2*sqsNorm);
   double pNorm = (sNorm-1)/(2*sqsNorm);
   
-  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]);
-  double hNorm = pow(sNorm, -par[5]);
+  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // E form
+  ///double gNorm = ( pow( sqsNorm+2.*pNorm*cosaNorm, -par[6] ) + pow( sqsNorm-2.*pNorm*cosaNorm, -par[6] ) ) * ( pow( sqsNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // s form
+  //double kappa = 1.;
+  //double gNorm = ( pow( 1. + pow(sqsNorm,-kappa) + cosaNorm, -par[6] ) + pow( 1. +pow(sqsNorm,-kappa) - cosaNorm, -par[6] ) ) * ( pow( 1 + pow(sqsNorm,-kappa), par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // kappa format
+ double hNorm = pow(sNorm, -par[5]);
 
   double nVal = gNorm*hNorm;
 
@@ -211,9 +217,9 @@ void aRange(string det, string state, double sqrts, double *apos) {
     apos[3] = 9.99e1;
   }
   else if(det == "CMS" && state == "jpsi") {
-    apos[1] = 1.01e-3;
-    apos[2] = 9.9;
-    apos[3] = 9.99e0;
+    apos[1] = 1.01e-2;
+    apos[2] = 16.9;
+    apos[3] = 9.99e2;
   }
   else if(det == "LHCb" && state == "jpsi"){
     apos[1] = 1.01e-1;
