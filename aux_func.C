@@ -211,60 +211,101 @@ int getCol(int i_set) {
 // define plot range depending on data label
 void aRange(string det, string state, double sqrts, double *apos) {
   apos[0] = -1;
-  if(det == "CMS" && state == "jpsi" && sqrts > 6000) {
-    apos[1] = 1.01e-5;
-    apos[2] = 39.9;
-    apos[3] = 9.99e1;
+  // CDF measurements - J/psi
+  if(det == "CDF" && state == "jpsi") {
+    apos[1] = 1.01e-1;
+    apos[2] = 6.9;
+    apos[3] = 9.99e3;
   }
-  else if(det == "CMS" && state == "jpsi") {
+  // CDF measurements  - psi(2S)
+  else if(det == "CDF" && state == "psi2") {
+    apos[1] = 1.01e-3;
+    apos[2] = 8.9;
+    apos[3] = 9.99e2;
+  }
+  // CMS measurements - 5 TeV J/psi
+  else if(det == "CMS" && state == "jpsi" && sqrts < 6000) {
     apos[1] = 1.01e-2;
     apos[2] = 16.9;
     apos[3] = 9.99e2;
   }
-  else if(det == "LHCb" && state == "jpsi"){
-    apos[1] = 1.01e-1;
-    apos[2] = 7.9;
-    apos[3] = 9.99e3;
+  // CMS measurements - 7 TeV J/psi
+  else if(det == "CMS" && state == "jpsi" && sqrts > 6000 && sqrts < 10000) {
+    apos[1] = 1.01e-4;
+    apos[2] = 31.9;
+    apos[3] = 9.99e2;
   }
+  // CMS measurements - 13 TeV J/psi
+  else if(det == "CMS" && state == "jpsi" && sqrts > 10000) {
+    apos[1] = 1.01e-5;
+    apos[2] = 39.9;
+    apos[3] = 9.99e2;
+  }
+  // CMS measurements - 7, 13 TeV psi(2S)
   else if (det == "CMS" && state == "psi2" && sqrts > 6000){
     apos[1] = 1.01e-4;
     apos[2] = 29.9;
     apos[3] = 9.99e1;
-  } 
+  }
+  // CMS measurements - 5 TeV psi(2S)
   else if (det == "CMS" && state == "psi2"){
     apos[1] = 1.01e-1;
     apos[2] = 8.9;
     apos[3] = 9.99e1;
   }
-    else if (det == "LHCb" && state == "psi2"){
-    apos[1] = 1.01e-3;
-    apos[2] = 8.9;
-    apos[3] = 9.99e3;
-  }
+    // CMS measurements - 7, 13 TeV Y(nS)
   else if (det == "CMS"){
     apos[1] = 1.01e-4;
     apos[2] = 13.9;
     apos[3] = 9.99e1;
   }
+  // LHCb measurements - 7, 8, 13 TeV J/psi
+  else if(det == "LHCb" && state == "jpsi"){
+    apos[1] = 1.01e-1;
+    apos[2] = 7.9;
+    apos[3] = 9.99e3;
+  }
+  // LHCb measurements - 7, 13 TeV psi(2S)
+  else if (det == "LHCb" && state == "psi2"){
+    apos[1] = 1.01e-3;
+    apos[2] = 8.9;
+    apos[3] = 9.99e3;
+  }
+  // LHCb measurements - 7, 13 TeV Y(nS)
   else if (det == "LHCb"){
     apos[1] = 1.01e-2;
     apos[2] = 5.9;
     apos[3] = 9.99e2;
   }
+  // ATLAS measurements - 5 TeV psi(nS)
+  else if (det == "ATLAS" && (state == "jpsi" || state == "psi2") && sqrts < 6000) {
+    apos[1] = 1.01e-2;
+    apos[2] = 13.9;
+    apos[3] = 9.99e2;
+  }
+  // ATLAS measurements - 5 TeV Y(nS)
+  else if (det == "ATLAS" && sqrts < 6000) {
+    apos[1] = 1.01e-2;
+    apos[2] = 4.9;
+    apos[3] = 9.99e2;
+  }
+  // ATLAS measurements - 7 TeV chic1,2
   else if (det == "ATLAS" && (state == "chic1" or state == "chic2")){
     apos[1] = 1.01e-1;
     apos[2] = 9.9;
     apos[3] = 9.99e2;
   }
+  // ATLAS measurements - 7 TeV psi(2S)
   else if (det == "ATLAS" && state == "psi2") {
     apos[1] = 1.01e-5;
     apos[2] = 29.9;
     apos[3] = 9.99e2;
   }
+  // ATLAS measurements - 7 TeV Y(nS)
   else if (det == "ATLAS") {
-    apos[1] = 1.01e-4;
-    apos[2] = 13.9;
-    apos[3] = 9.99e1;
+    apos[1] = 1.01e-3;
+    apos[2] = 7.9;
+    apos[3] = 9.99e2;
   }
 }
 

@@ -190,7 +190,7 @@ public:
 	  // aux to correct unc: TODO should make the numbers here a variable to be read off somewhere
 	  if(unc_method[id] == 1)
 	    aux=nums[8]*nums[8]-1.8e-2*nums[5]*1.8e-2*nums[5];
-	  
+
 	  datasigma[0].push_back(mass);
 	  datasigma[1].push_back(nums[0]);
 	  datasigma[2].push_back(nums[1]);
@@ -386,7 +386,7 @@ public:
     // initialize normalizations
     double L_est[nparam[0]];
     for(int i = 0; i < nparam[0]; i++) {
-      if(i < datasigma[11][datasigma[11].size()-1]) {
+      if(i <= datasigma[11][datasigma[11].size()-1]) {
 	string sName = parseString(norm[i].name, "_")[1];
 	L_est[i] = lest(sName);
       }
@@ -529,8 +529,8 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 0.625, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    //lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
     
@@ -576,8 +576,8 @@ public:
     //text on the plot
     TLatex lp;
     lp.SetTextSize(0.03);
-    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    //lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lp.DrawLatex(xpos, getPos(-10, 10, 1./20, 0), Form("pp %.0f TeV", sqrts));
     
     // save pulls plots
@@ -713,9 +713,13 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    //lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
+    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
+      lc.SetTextColor(kRed);
+      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("NOT IN FIT"));
+    }
     
     // draw legend
     counter = 0;
@@ -783,10 +787,14 @@ public:
     //text on the plot
     TLatex lp;
     lp.SetTextSize(0.03);
-    lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    //lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lp.DrawLatex(xpos, getPos(-9, 9, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    
+    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
+      lp.SetTextColor(kRed);
+      lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("NOT IN FIT"));
+    }
+
     //draw legend
     leg->Draw();
     
@@ -836,10 +844,14 @@ public:
     //text on the plot
     TLatex ld;
     ld.SetTextSize(0.03);
-    ld.DrawLatex(xpos, getPos(1, -1, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d", chisquare, ndf));
-    ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
+    ld.DrawLatex(xpos, getPos(1, -1, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    //ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     ld.DrawLatex(xpos, getPos(-1, 1, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    
+    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
+      ld.SetTextColor(kRed);
+      ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("NOT IN FIT"));
+    }
+
     //draw legend
     leg->Draw();
     
@@ -876,8 +888,11 @@ public:
 			     "BR(\\chi_{c2}\\rightarrow J/\\psi\\gamma)",
 			     "BR(\\psi(2S)\\rightarrow\\mu^+\\mu^-)",
 			     "BR(\\psi(2S)\\rightarrow J/\\psi\\pi^+\\pi^-)",
+			     "\\mathcal L_{ATLAS,5.02}",
 			     "\\mathcal L_{ATLAS,7}(c\\overline c)",
 			     "\\mathcal L_{ATLAS,7}(b\\overline b)",
+			     "\\mathcal L_{CDF,1.96}(J/\\psi)",
+			     "\\mathcal L_{CDF,1.96}(\\psi(2S))",
 			     "\\mathcal L_{CMS,5.02}",
 			     "\\mathcal L_{CMS,7}",
 			     "\\mathcal L_{CMS,13}",
@@ -909,6 +924,9 @@ public:
       tex << setprecision(p_norm) << fixed << fitpar[i] << " & ";
       if(efitpar[i] > 0) tex << efitpar[i];
       else tex << "fixed";
+      if(i >= nparam[0]+nparam[1] && i < nparam[0]+nparam[1]+nparam[2] && efitpar[i] != 0) {
+	tex << " (" <<  (fitpar[i]-1.)/nuis[i-nparam[0]-nparam[1]].normunc << " $\\sigma$)";
+      }
       tex << " \\\\" << endl;
     }
     tex << "min $p_T/M$ & " << ptmmin << " & fixed \\\\" << endl;
