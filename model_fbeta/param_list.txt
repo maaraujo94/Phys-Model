@@ -1,12 +1,10 @@
-norm L_jpsi 1e-2 0
-norm L_chic1 5e-2 0
-norm L_chic2 5e-2 0
-norm L_psi2 1e-2 0
-norm L_ups1 1e1 0
+norm L_jpsi 1.1e-2 0
+norm L_chic1 4.3e-2 0
+norm L_chic2 4.2e-2 0
+norm L_psi2 2.2e-2 0
+norm L_ups1 6.4e0 0
 norm L_ups2 1e1 0
 norm L_ups3 1e1 0
-norm L_jpsi_5p02 1. 1
-norm L_psi2_5p02 1. 1
 shape rho 2 0.25 1
 shape delta 0 0.5 1
 nuis BR_jpsi_dm 0.033/5.961 0

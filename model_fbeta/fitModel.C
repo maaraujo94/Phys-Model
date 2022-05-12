@@ -332,7 +332,7 @@ public:
 
       //cycle over each point in the state
       for(int n = 0; n < n_pts[id]; n++)
-	if(datasigma[3][n+counter] >= ptmmin) {
+	if(datasigma[4][n+counter] >= ptmmin) {
 	  //calculate cs prediction
 	  pred = csCalc(n+counter, fbeta);
 	  
@@ -451,7 +451,7 @@ public:
     //calculating the number of data points used in the fit
     for(int i = 0; i < (int)datasigma[0].size(); i++)
       {
-	if(datasigma[3][i] >= ptmmin)
+	if(datasigma[4][i] >= ptmmin)
 	  ndf += 1;
       }
     cout << ndf << " data points" << endl;
@@ -593,7 +593,8 @@ public:
     int id, counter = 0, mkrStyle;
     double lumibr, cs;
     string savename;
-
+    ofstream tex;
+    
     // attribute axis range based on dataset
     double posif[4];
     
@@ -617,6 +618,10 @@ public:
     TGraphAsymmErrors **gp = new TGraphAsymmErrors*[nsets];
     TGraphAsymmErrors **gdev = new TGraphAsymmErrors*[nsets];
     TF1 **f = new TF1*[nsets];
+
+    tex.open("plots/chisquare.tex", std::ios_base::app);
+    double chis = 0;
+    int pts = 0;
     
     //cycle over all states
     for(int i_set = 0; i_set < nsets; i_set++) {
@@ -653,8 +658,13 @@ public:
 	  pullpts[1][j] = 0.;
 	  devpts[0][j] = (datapts[1][j] - cs) / cs;
 	  devpts[1][j] = 0.;
+
+	  if(datasigma[4][j+counter] > ptmmin) {
+	    chis += pow(pullpts[0][j],2);
+	    pts += 1;
+	  }
 	}
-	
+	  
 	mkrStyle = getStyle(auxnames[0][id]);
 	
 	// data plots defined and drawn
@@ -678,7 +688,7 @@ public:
 	gp[i_set]->SetMarkerStyle(mkrStyle);
 	gp[i_set]->SetMarkerSize(.75);
 	for(int i_data = 0; i_data < n_pts[id]; i_data++)
-	  if(datapts[0][i_data] < ptmmin)
+	  if(datasigma[4][counter+i_data] < ptmmin)
 	    gp[i_set]->RemovePoint(0);
 	
 	gdev[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], devpts[0], datapts[3], datapts[4], devpts[1], devpts[1]);
@@ -687,7 +697,7 @@ public:
 	gdev[i_set]->SetMarkerStyle(mkrStyle);
 	gdev[i_set]->SetMarkerSize(.75);
 	for(int i_data = 0; i_data < n_pts[id]; i_data++)
-	  if(datapts[0][i_data] < ptmmin)
+	  if(datasigma[4][counter+i_data] < ptmmin)
 	    gdev[i_set]->RemovePoint(0);
 
 	// fit model can't be made as flexible regarding param number
@@ -708,7 +718,11 @@ public:
 	counter += n_pts[id];
       }
     }
-    
+
+    tex << setprecision(2) << fixed << datasigma[9][counter-1]/1000 << " TeV " << auxnames[0][id] << " " << auxnames[1][id]  << " & " <<  pts << " & " << setprecision(1) << fixed << chis << " & ";
+    if(pts > 0) tex << chis/(double)pts;
+    tex << " \\\\" << endl;
+
     // text on the plot
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
@@ -720,6 +734,8 @@ public:
       lc.SetTextColor(kRed);
       lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("NOT IN FIT"));
     }
+    else
+      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100));
     
     // draw legend
     counter = 0;
@@ -794,6 +810,8 @@ public:
       lp.SetTextColor(kRed);
       lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("NOT IN FIT"));
     }
+    else
+      lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100.));
 
     //draw legend
     leg->Draw();
@@ -817,19 +835,6 @@ public:
     //plot line at zero
     zero->Draw("lsame");
 
-    /*    TLine *dlim1 = new TLine(posif[0], -5, posif[2], -5);
-	  dlim1->SetLineStyle(kDotted);
-	  dlim1->Draw("lsame");
-	  TLine *dlim2 = new TLine(posif[0], -3, posif[2], -3);
-	  dlim2->SetLineStyle(kDotted);
-	  dlim2->Draw("lsame");
-	  TLine *dlim3 = new TLine(posif[0], 3, posif[2], 3);
-	  dlim3->SetLineStyle(kDotted);
-	  dlim3->Draw("lsame");
-	  TLine *dlim4 = new TLine(posif[0], 5, posif[2], 5);
-	  dlim4->SetLineStyle(kDotted);
-	  dlim4->Draw("lsame");*/
-
     // plot pt/M cutoff
     TLine *ptmd = new TLine(ptmmin, -1, ptmmin, 1);
     ptmd->SetLineStyle(7);
@@ -851,6 +856,8 @@ public:
       ld.SetTextColor(kRed);
       ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("NOT IN FIT"));
     }
+    else
+      ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100));
 
     //draw legend
     leg->Draw();
@@ -860,6 +867,8 @@ public:
     const char* saved = savename.c_str();
     c->SaveAs(saved);
 
+    tex.close();
+    
     c->Destructor();
   }
   
@@ -879,8 +888,6 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
-			     "L_{J/\\psi,5.02}",
-			     "L_{\\psi(2S),5.02}",
 			     "\\rho",
 			     "\\delta",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
@@ -935,6 +942,15 @@ public:
     tex << "\\end{table}" << endl;
     tex.close();
 
+    // make latex file with fit chi2 contrib
+    tex.open("plots/chisquare.tex");
+    tex << "\\begin{table}[h!]" << endl;
+    tex << "\\centering" << endl;
+    tex << "\\begin{tabular}{c|c|c|c}" << endl;
+    tex << "Dataset & Nr points & $\\chi^2$ contribution & $<\\chi^2>$ \\\\" << endl;
+    tex << "\\hline" << endl;
+    tex.close();
+
     // cycle over each line of the plotting division file
     fin.open(state_div);
     while(1) {
@@ -958,6 +974,22 @@ public:
 	break;
     }
     fin.close();
+
+    tex.open("plots/chisquare.tex", std::ios_base::app);
+    tex << "\\hline" << endl;
+    for(int i = nparam[0]+nparam[1]; i < npartot-nparam[3]; i++) {
+      tex << "$" << names[i] << "$ &  &";
+      if(efitpar[i] != 0) {
+	tex << " " << setprecision(1) << fixed << pow((fitpar[i]-1.)/nuis[i-nparam[0]-nparam[1]].normunc, 2) << " &  \\\\" << endl;
+      }
+      else
+	tex << " fixed & \\\\" << endl;
+    }
+    tex << "\\end{tabular}" << endl;
+    tex << "\\caption{Contribution to fit $\\chi^2$ of each dataset}" << endl;
+    tex << "\\end{table}" << endl;
+    tex.close();
+
   }
 };
 

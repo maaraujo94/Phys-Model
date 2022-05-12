@@ -12,10 +12,10 @@
 void c_test(int tofit)
 {
   // only input element given in main: lists of datasets and of parameters for the fit, fit and plot instructions
-  const char* input_list = "state_list.txt"; //input files for each state+detector+y_bin, uncertainty method and correction factors. use # to remove a state from the fit
+  const char* input_list = "/home/mariana/Documents/2019_PhD_work/Phenom/Phys-Model/state_list.txt"; //input files for each state+detector+y_bin, uncertainty method and correction factors. use # to remove a state from the fit
   const char* param_list = "param_list.txt"; //fit parameters. set last value to 1 to fix in the fit. norm parameters have relative uncertainty, shape have central value and uncertainty, nuis have uncertainty
-  const char* method_list = "param_method.txt"; //sets which norm and nuisance parameters affect each dataset. Shouldn't need changes
-  const char* plot_div = "plot_states.txt"; //sets which datasets are plotted together. Shouldn't need changes
+  const char* method_list = "/home/mariana/Documents/2019_PhD_work/Phenom/Phys-Model/param_method.txt"; //sets which norm and nuisance parameters affect each dataset. Shouldn't need changes
+  const char* plot_div = "/home/mariana/Documents/2019_PhD_work/Phenom/Phys-Model/plot_states.txt"; //sets which datasets are plotted together. Shouldn't need changes
   
   // generates a map btw masses and state names
   fitclass.init();

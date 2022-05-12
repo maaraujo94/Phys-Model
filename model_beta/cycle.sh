@@ -19,6 +19,7 @@ EOF
 
 cd plots
 echo "now in plots directory"
-pdflatex plot.tex > res.txt
+pdflatex plot_dev.tex > res.txt
+pdflatex plot_pull.tex > res.txt
 rm res.txt
 cd ..

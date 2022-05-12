@@ -197,6 +197,7 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
 // define marker style from data "experiment" label
 int getStyle(string det) {
   if(det == "CMS") return 20;
+  if(det == "CDF") return 34;
   if(det == "ATLAS") return 25;
   if(det == "LHCb") return 22;
   else return 1;
