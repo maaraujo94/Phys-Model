@@ -50,7 +50,7 @@ public:
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
-  double ptmmin = 2.;
+double ptmmin = 2.5;
   double chisquare, ptN = 3, sqsN = 7000;
   string fitresname = "fit.txt";
   vector <double> fitpar, efitpar, sigpar;
