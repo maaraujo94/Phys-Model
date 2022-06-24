@@ -206,7 +206,7 @@ public:
 	  else if(unc_method[id] == 1)
 	    datasigma[7].push_back(sqrt(nums[6]*nums[6]+aux)*mass/signorm[id]);
 	  else if(unc_method[id] == 2)
-	    datasigma[7].push_back(sqrt(nums[6]*nums[6]*nums[5]*nums[5]+nums[8]*nums[8]*nums[5]*nums[5])*mass/(100*signorm[id]));
+	    datasigma[7].push_back(nums[6]*mass/signorm[id]);
 
 	  datasigma[8].push_back(nums[10]/nums[11]-1);
 	  datasigma[9].push_back(sqrts);
@@ -724,7 +724,10 @@ public:
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
-	savename = Form("%.2f < y < %.2f", datasigma[1][counter], datasigma[2][counter]);
+	if ( auxnames[0][sets[0]] == "LHCb")
+	  savename = Form("%.2f < y < %.2f", datasigma[1][counter], datasigma[2][counter]);
+	else
+	  savename = Form("%.2f < |y| < %.2f", datasigma[1][counter], datasigma[2][counter]);
 	const char *st = savename.c_str();
 	leg->AddEntry(gd[i], st, "pl");
 	counter += n_pts[sets[i]];
@@ -873,6 +876,7 @@ public:
 			     "\\mathcal L_{ATLAS,5.02}",
 			     "\\mathcal L_{ATLAS,7}(c\\overline c)",
 			     "\\mathcal L_{ATLAS,7}(b\\overline b)",
+			     "\\mathcal L_{ATLAS,13}",
 			     "\\mathcal L_{CDF,1.96}(J/\\psi)",
 			     "\\mathcal L_{CDF,1.96}(\\psi(2S))",
 			     "\\mathcal L_{CMS,5.02}",

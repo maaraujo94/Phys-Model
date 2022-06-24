@@ -22,9 +22,10 @@ nuis BR_psip_jdp 0.3/34.68 0
 nuis L_ATLAS_5p02 5.4e-2 0
 nuis L_ATLAS_7_cc 1.8e-2 0
 nuis L_ATLAS_7_bb 3.9e-2 0
+nuis L_ATLAS_13 1.7e-2 0
 nuis L_CDF_1p96_jpsi 6.9e-2 0
 nuis L_CDF_1p96_psi2 6.e-2 0
-nuis L_CMS_5p02 2.3e-2 0
+nuis L_CMS_5p02 2.3e-2 1
 nuis L_CMS_7 2.2e-2 0
 nuis L_CMS_13 2.3e-2 0
 nuis L_LHCb_7_jpsi 3.5e-2 0

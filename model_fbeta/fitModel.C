@@ -50,7 +50,8 @@ public:
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
-  double ptmmin = 2., chisquare, ptN = 3, sqsN = 7000;
+  double ptmmin = 2.;
+  double chisquare, ptN = 3, sqsN = 7000;
   string fitresname = "fit.txt";
   vector <double> fitpar, efitpar, sigpar;
 
@@ -205,7 +206,7 @@ public:
 	  else if(unc_method[id] == 1)
 	    datasigma[7].push_back(sqrt(nums[6]*nums[6]+aux)*mass/signorm[id]);
 	  else if(unc_method[id] == 2)
-	    datasigma[7].push_back(sqrt(nums[6]*nums[6]*nums[5]*nums[5]+nums[8]*nums[8]*nums[5]*nums[5])*mass/(100*signorm[id]));
+	    datasigma[7].push_back(nums[6]*mass/signorm[id]);
 
 	  datasigma[8].push_back(nums[10]/nums[11]-1);
 	  datasigma[9].push_back(sqrts);
@@ -276,7 +277,7 @@ public:
   }
 
   // auxiliary function that calculates the cross section for a given data point
-  double csCalc(int i, double fbeta) {
+  double csCalc(int i) {
     dpt = datasigma[5][i]-datasigma[4][i];
     dy = datasigma[2][i]-datasigma[1][i];
     npt = nmin + int(0.5 + dn*(dpt*QMass["psip"]-1.));
@@ -287,11 +288,7 @@ public:
       sigpar[1] = datasigma[4][i]+xpt*dpt/(npt-1.)+1e-10;
       for(int xy = 0; xy < ny; xy++) {
 	sigpar[2] = datasigma[1][i]+xy*dy/(ny-1.);
-	sigpar[5] = 2;
-	double c2 = sig(sigpar);
-	sigpar[5] = 3;
-	double c3 = sig(sigpar);
-	cs+=fbeta*c2+(1.-fbeta)*c3;
+	cs += sig_wrapper(sigpar);
       }
     }
     cs/=(nsteps);
@@ -310,7 +307,7 @@ public:
       else sigpar[i] = par[i-6+nparam[0]];
     }
 
-    double pred, chisq, sum = 0, ratio, lumibr, fbeta;
+    double pred, chisq, sum = 0, ratio, lumibr;
     int counter = 0;
 
     // run over all pts and get chisquare
@@ -328,13 +325,13 @@ public:
       //for each state, assign sqrt(s)/M, M, fbeta
       sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
       sigpar[4] = datasigma[0][counter];
-      fbeta = par[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]];
+      sigpar[5] = par[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]];
 
       //cycle over each point in the state
       for(int n = 0; n < n_pts[id]; n++)
 	if(datasigma[4][n+counter] >= ptmmin) {
 	  //calculate cs prediction
-	  pred = csCalc(n+counter, fbeta);
+	  pred = csCalc(n+counter);
 	  
 	  //ratio will be !=1 if we consider polarization
 	  //lambda=0.;
@@ -423,6 +420,7 @@ public:
 	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.1, 0.05, 0, 0);
       else
 	fit->SetParameter(i+nparam[0]+nparam[1]+nparam[2], Form("fb_%s",  state_id[i].c_str()), 0.3, 0.1, 0, 0);
+      // fix f_beta for states that aren't included in the fit
       int lds = datasigma[0].size(), c_fix = 1;
       for(int i_ds = 0; i_ds < lds; i_ds++) {
 	if(datasigma[11][i_ds] == i) {
@@ -635,10 +633,11 @@ public:
 	for(int i = 0; i < nuis_att[id].size(); i++)
 	  lumibr *= fitpar[nuis_att[id][i]+nparam[0]+nparam[1]];
 
-	// get sqrt(s) / M and MQQ
+	// get sqrt(s) / M, MQQ and fbeta
 	sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
 	sigpar[4] = datasigma[0][counter];
-	
+	sigpar[5] = fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]];
+
 	float datapts[5][n_pts[id]];
 	float pullpts[2][n_pts[id]];
 	float devpts[2][n_pts[id]];
@@ -653,7 +652,7 @@ public:
 	  datapts[4][j] = datasigma[5][j+counter] - datapts[0][j];
 	  
 	  // filling arrays for pulls plotting
-	  cs = csCalc(j+counter, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
+	  cs = csCalc(j+counter);
 	  pullpts[0][j] = (datapts[1][j] - cs) / datapts[2][j];
 	  pullpts[1][j] = 0.;
 	  devpts[0][j] = (datapts[1][j] - cs) / cs;
@@ -702,15 +701,11 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], 2, [5], [6]) + (1.-[4])*sigplot([0], x, [1], [2], [3], 3, [5], [6])", ptmmin, 49.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", ptmmin, 49.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
-	if(datasigma[1][counter] > 0)
-	  f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-	else
-	  f[i_set]->SetParameter(1, datasigma[2][counter]/2);
-	for(int j = 2; j < 7; j++)
+	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
+	for(int j = 2; j < 9; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
-	f[i_set]->SetParameter(4, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]]);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
 	f[i_set]->SetLineColor(getCol(i_set));
 	f[i_set]->Draw("lsame");
@@ -728,14 +723,8 @@ public:
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
-      lc.SetTextColor(kRed);
-      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("NOT IN FIT"));
-    }
-    else
-      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("f_{#beta} = %.1f%%", sigpar[5]*100));
     
     // draw legend
     counter = 0;
@@ -746,7 +735,10 @@ public:
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
-	savename = Form("%.2f < y < %.2f", datasigma[1][counter], datasigma[2][counter]);
+	if ( auxnames[0][sets[0]] == "LHCb")
+	  savename = Form("%.2f < y < %.2f", datasigma[1][counter], datasigma[2][counter]);
+	else
+	  savename = Form("%.2f < |y| < %.2f", datasigma[1][counter], datasigma[2][counter]);
 	const char *st = savename.c_str();
 	leg->AddEntry(gd[i], st, "pl");
 	counter += n_pts[sets[i]];
@@ -804,14 +796,8 @@ public:
     TLatex lp;
     lp.SetTextSize(0.03);
     lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lp.DrawLatex(xpos, getPos(-9, 9, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
-      lp.SetTextColor(kRed);
-      lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("NOT IN FIT"));
-    }
-    else
-      lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100.));
+    lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("f_{#beta} = %.1f%%", sigpar[5]*100.));
 
     //draw legend
     leg->Draw();
@@ -850,14 +836,8 @@ public:
     TLatex ld;
     ld.SetTextSize(0.03);
     ld.DrawLatex(xpos, getPos(1, -1, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     ld.DrawLatex(xpos, getPos(-1, 1, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    if(auxnames[0][id] == "CMS" && datasigma[9][counter-1] < 6000) {
-      ld.SetTextColor(kRed);
-      ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("NOT IN FIT"));
-    }
-    else
-      ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("f_{#beta} = %.1f%%", fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter-1]]*100));
+    ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("f_{#beta} = %.1f%%", sigpar[5]*100));
 
     //draw legend
     leg->Draw();
@@ -888,6 +868,8 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
+			     "\\beta_1",
+			     "\\beta_2",
 			     "\\rho",
 			     "\\delta",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
@@ -898,6 +880,7 @@ public:
 			     "\\mathcal L_{ATLAS,5.02}",
 			     "\\mathcal L_{ATLAS,7}(c\\overline c)",
 			     "\\mathcal L_{ATLAS,7}(b\\overline b)",
+			     "\\mathcal L_{ATLAS,13}",
 			     "\\mathcal L_{CDF,1.96}(J/\\psi)",
 			     "\\mathcal L_{CDF,1.96}(\\psi(2S))",
 			     "\\mathcal L_{CMS,5.02}",
