@@ -45,14 +45,14 @@ public:
 
   // ndf: nr data points - nr free params
   // ptmmin, ptN: minimum pT/M of fit, normalization pT/M (OUTDATED!)
-  // chisquare: chi^2 of the fit
+  // chisquare: chi^2 of the fits
   // fitresname: filename to store the fit results
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
   double ptmmin = 2.;
   double chisquare, ptN = 3, sqsN = 7000;
-  string fitresname = "fit.txt";
+  string fitresname = "../model_final/fit.txt";
   vector <double> fitpar, efitpar, sigpar;
 
   // only used inside csCalc to define fitting bins
@@ -537,10 +537,12 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 0.625, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     xpos = getPos(posif[0], posif[2], 1./20, 0);
-    lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
+    if((int)sqrts == sqrts)
+      lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
+    else
+      lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.2f TeV",  sqrts));
+      
     
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs.pdf";
     const char *st = savename.c_str();
@@ -591,7 +593,7 @@ public:
     // save pulls plots
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", sqrts)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
     const char* savep = savename.c_str();
-    c->SaveAs(savep);
+    //c->SaveAs(savep);
     
     c->Destructor();
   }
@@ -599,7 +601,7 @@ public:
   //method that plots everything in each canvas
   void plotcanv(int nsets, int *sets) {
     int id, counter = 0, mkrStyle;
-    double lumibr, cs;
+    double lumibr, cs, y_avg;
     string savename;
     ofstream tex;
     
@@ -674,12 +676,13 @@ public:
 	  }
 	}
 	  
-	mkrStyle = getStyle(auxnames[0][id]);
-	
+	mkrStyle = getStyle(auxnames[0][id], datasigma[9][counter]/1000.);
+	y_avg = (datasigma[1][counter]+datasigma[2][counter])/2;
+
 	// data plots defined and drawn
 	gd[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], datapts[1], datapts[3], datapts[4], datapts[2], datapts[2]);
-	gd[i_set]->SetLineColor(getCol(i_set));
-	gd[i_set]->SetMarkerColor(getCol(i_set));
+	gd[i_set]->SetLineColor(getCol_s(i_set));
+	gd[i_set]->SetMarkerColor(getCol_s(i_set));
 	gd[i_set]->SetMarkerStyle(mkrStyle);
 	gd[i_set]->SetMarkerSize(.75);
 	for(int i_pt = 0; i_pt < n_pts[id]; i_pt++) {
@@ -692,8 +695,8 @@ public:
 	// pulls plots defined (but not drawn)
 	// all pts below ptmmin aren't drawn
 	gp[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], pullpts[0], datapts[3], datapts[4], pullpts[1], pullpts[1]);
-	gp[i_set]->SetLineColor(getCol(i_set));
-	gp[i_set]->SetMarkerColor(getCol(i_set));
+	gp[i_set]->SetLineColor(getCol_s(i_set));
+	gp[i_set]->SetMarkerColor(getCol_s(i_set));
 	gp[i_set]->SetMarkerStyle(mkrStyle);
 	gp[i_set]->SetMarkerSize(.75);
 	for(int i_data = 0; i_data < n_pts[id]; i_data++)
@@ -701,8 +704,8 @@ public:
 	    gp[i_set]->RemovePoint(0);
 	
 	gdev[i_set] = new TGraphAsymmErrors(n_pts[id], datapts[0], devpts[0], datapts[3], datapts[4], devpts[1], devpts[1]);
-	gdev[i_set]->SetLineColor(getCol(i_set));
-	gdev[i_set]->SetMarkerColor(getCol(i_set));
+	gdev[i_set]->SetLineColor(getCol_s(i_set));
+	gdev[i_set]->SetMarkerColor(getCol_s(i_set));
 	gdev[i_set]->SetMarkerStyle(mkrStyle);
 	gdev[i_set]->SetMarkerSize(.75);
 	for(int i_data = 0; i_data < n_pts[id]; i_data++)
@@ -717,7 +720,7 @@ public:
 	for(int j = 2; j < 9; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
-	f[i_set]->SetLineColor(getCol(i_set));
+	f[i_set]->SetLineColor(getCol_s(i_set));
 	f[i_set]->Draw("lsame");
 	
 	counter += n_pts[id];
@@ -732,16 +735,18 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("f_{#beta} = %.1f%%", sigpar[5]*100));
+    if((int)(datasigma[9][counter-1]/1000.) == datasigma[9][counter-1]/1000.)
+      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
+    else
+      lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.2f TeV", datasigma[9][counter-1]/1000.));
+
     
     // draw legend
     counter = 0;
     for(int i = 0; i < sets[0]; i++) counter += n_pts[i];
     
     double endpt = 0.85 - (double)nsets*0.05;  
-    TLegend *leg = new TLegend(0.65, endpt, 0.9, 0.9);
+    TLegend *leg = new TLegend(0.63, endpt, 0.9, 0.9);
     leg->SetTextSize(0.03);
     for(int i = 0; i < nsets; i++)  
       if (n_pts[sets[i]] > 0) {
@@ -815,7 +820,7 @@ public:
     //save pulls plot
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs_pulls.pdf";
     const char* savep = savename.c_str();
-    c->SaveAs(savep);
+    //c->SaveAs(savep);
 
     // redo plotting for relative deviation
     c->Clear();
@@ -855,7 +860,7 @@ public:
     //save pulls plot
     savename = "plots/"+auxnames[1][sets[0]]+"_"+Form("%.0f", datasigma[9][counter-1]/1000.)+"_"+auxnames[0][sets[0]]+"_cs_devs.pdf";
     const char* saved = savename.c_str();
-    c->SaveAs(saved);
+    //c->SaveAs(saved);
 
     tex.close();
     
@@ -865,6 +870,7 @@ public:
   //method that does the plotting
   void doPlot(const char* state_div) {
     gROOT->SetBatch();
+    init_color();
 
     ifstream fin;
     ofstream tex;
