@@ -27,6 +27,7 @@ using namespace std;
 double sqsNorm = 9.;
 double cosaNorm = 0.;
 
+//PDF *pdf_ct = mkPDF("CT14nnlo", 0);
 PDF *pdf_ct = mkPDF("CT18NNLO", 0);
 
 // function to parse a string into components separated by "deli"
@@ -115,10 +116,10 @@ double integf(double *par)
   double fx2 = pdf_new(x2, s_hat, s);
 
   //the dsigma/dt^star function multiplied by mass-normalized jacobian
-  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the E format
+  //double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the E format
   //double gfunc = ( pow( sqstar+2.*pstar*par[3], -par[6] ) + pow( sqstar-2.*pstar*par[3], -par[6] ) ) * ( pow( sqstar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the s format
-  //double kappa = 1;
-  //double gfunc = ( pow( 1. + pow(sqstar,-kappa) + par[3], -par[6] ) + pow( 1. +pow(sqstar,-kappa) - par[3], -par[6] ) ) * ( pow( 1 + pow(sqstar,-kappa), par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the kappa format
+  double kappa = 1;
+  double gfunc = ( pow( 1. + pow(sqstar,-kappa) + par[3], -par[6] ) + pow( 1. +pow(sqstar,-kappa) - par[3], -par[6] ) ) * ( pow( 1 + pow(sqstar,-kappa), par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the kappa format
   double hfunc = pow(sstar, -par[5]);
  
   double dsdt = gfunc * hfunc;
@@ -151,10 +152,10 @@ double sig(vector <double> par)
   double eNorm = (sNorm+1)/(2*sqsNorm);
   double pNorm = (sNorm-1)/(2*sqsNorm);
   
-  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // E form
+  //double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // E form
   ///double gNorm = ( pow( sqsNorm+2.*pNorm*cosaNorm, -par[6] ) + pow( sqsNorm-2.*pNorm*cosaNorm, -par[6] ) ) * ( pow( sqsNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // s form
-  //double kappa = 1.;
-  //double gNorm = ( pow( 1. + pow(sqsNorm,-kappa) + cosaNorm, -par[6] ) + pow( 1. +pow(sqsNorm,-kappa) - cosaNorm, -par[6] ) ) * ( pow( 1 + pow(sqsNorm,-kappa), par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // kappa format
+  double kappa = 1.;
+  double gNorm = ( pow( 1. + pow(sqsNorm,-kappa) + cosaNorm, -par[6] ) + pow( 1. +pow(sqsNorm,-kappa) - cosaNorm, -par[6] ) ) * ( pow( 1 + pow(sqsNorm,-kappa), par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // kappa format
  double hNorm = pow(sNorm, -par[5]);
 
   double nVal = gNorm*hNorm;

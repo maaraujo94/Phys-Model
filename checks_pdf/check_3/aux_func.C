@@ -27,7 +27,7 @@ using namespace std;
 double sqsNorm = 9.;
 double cosaNorm = 0.;
 
-PDF *pdf_ct = mkPDF("CT18NNLO", 0);
+PDF *pdf_ct = mkPDF("ABMP16_5_nnlo", 0);
 
 // function to parse a string into components separated by "deli"
 vector< string > parseString( string line, string deli) {
