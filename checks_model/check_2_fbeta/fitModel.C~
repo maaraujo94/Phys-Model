@@ -325,7 +325,11 @@ public:
       //for each state, assign sqrt(s)/M, M, fbeta
       sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
       sigpar[4] = datasigma[0][counter];
-      sigpar[5] = par[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][counter]];
+      int setf = nparam[0]+nparam[1]+nparam[2];
+      if(datasigma[11][counter] == 2)
+	setf += 1;
+      else setf += datasigma[11][counter];
+      sigpar[5] = par[setf];
 
       //cycle over each point in the state
       for(int n = 0; n < n_pts[id]; n++)
@@ -429,6 +433,7 @@ public:
 	}
       }
       if(c_fix == 1) fit->FixParameter(i+nparam[0]+nparam[1]+nparam[2]);
+      if(i == 2) fit->FixParameter(i+nparam[0]+nparam[1]+nparam[2]);
     }
 
     fit->ExecuteCommand("MIGRAD",0,0);
@@ -439,6 +444,8 @@ public:
       fitpar[i] = fit->GetParameter(i);
       efitpar[i] = fit->GetParError(i);
     }
+    fitpar[nparam[0]+nparam[1]+nparam[2]+2] = fitpar[nparam[0]+nparam[1]+nparam[2]+1];
+    efitpar[nparam[0]+nparam[1]+nparam[2]+2] = efitpar[nparam[0]+nparam[1]+nparam[2]+1];
 
     double chipar[npartot];
     for(int i = 0; i < npartot; i++)
@@ -489,6 +496,9 @@ public:
       fin >> fitpar[i] >> efitpar[i];
     fin >> chisquare >> ndf;
     fin.close();
+
+    fitpar[nparam[0]+nparam[1]+nparam[2]+2] = fitpar[nparam[0]+nparam[1]+nparam[2]+1];
+    efitpar[nparam[0]+nparam[1]+nparam[2]+2] = efitpar[nparam[0]+nparam[1]+nparam[2]+1];
 
     double pred, chisq, sum = 0, ratio, lumibr;
 
@@ -701,7 +711,7 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", ptmmin, 49.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", ptmmin, 149.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
 	for(int j = 2; j < 9; j++)
@@ -868,6 +878,7 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
+			     "L_{ATLAS,\\Upsilon}",
 			     "\\beta_1",
 			     "\\beta_2",
 			     "\\rho",

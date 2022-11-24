@@ -27,7 +27,7 @@ using namespace std;
 double sqsNorm = 9.;
 double cosaNorm = 0.;
 
-PDF *pdf_ct = mkPDF("CT14nnlo", 0);
+PDF *pdf_ct = mkPDF("CT18NNLO", 0);
 
 // function to parse a string into components separated by "deli"
 vector< string > parseString( string line, string deli) {
@@ -171,9 +171,18 @@ double sigplot(double sqs_M, double xi, double y, double L, double M, double bet
   return sig(pars);
 }
 
+double sig_wrapper(vector <double> par)
+{
+  vector <double> pars = {par[0], par[1], par[2], par[3], par[4], par[6], par[8], par[9]};
+  double c1 = sig(pars);
+  pars[5] = par[7];
+  double c2 = sig(pars);
+  return par[5] * c1 + (1.-par[5]) * c2;
+}
+
 //calculates the average pT/M of a bin by weighing it with the model cs
 //uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
-double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par)
+double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par, double fbeta)
 {
   double uint = 0, lint = 0, dpt = ubound-lbound, dy = uybound-lybound;
   int npt = 8, ny = 4;
@@ -182,9 +191,9 @@ double avgptm(double lbound, double ubound, double lybound, double uybound, vect
     par[1] = lbound + xpt*dpt/(npt-1.)+1e-10;
     for(int xy = 0; xy < ny; xy++) {
       par[2] = lybound + xy*dy/(ny-1.);
-      double cs = sig(par);
-      uint += cs*par[1];
-      lint += cs;
+      double sig_f = sig_wrapper(par);
+      uint += sig_f*par[1];
+      lint += sig_f;
     }
   }
   return uint / lint;
@@ -222,7 +231,7 @@ void aRange(string det, string state, double sqrts, double *apos) {
   }
   // CMS measurements - 5 TeV J/psi
   else if(det == "CMS" && state == "jpsi" && sqrts < 6000) {
-    apos[1] = 1.01e-2;
+    apos[1] = 1.01e-3;
     apos[2] = 16.9;
     apos[3] = 9.99e2;
   }
@@ -302,6 +311,12 @@ void aRange(string det, string state, double sqrts, double *apos) {
   else if (det == "ATLAS" && state == "psi2") {
     apos[1] = 1.01e-5;
     apos[2] = 29.9;
+    apos[3] = 9.99e2;
+  }
+  // ATLAS measurements - 13 TeV J/psi
+  else if (det == "ATLAS" && state == "jpsi") {
+    apos[1] = 1.01e-10;
+    apos[2] = 119.9;
     apos[3] = 9.99e2;
   }
   // ATLAS measurements - 7 TeV Y(nS)

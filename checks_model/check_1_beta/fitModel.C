@@ -33,8 +33,8 @@ public:
   // *_att: norm and nuis params to be multiplied to get value for each dataID
   // datasigma: storage of all (quantitative) info of each state
   // auxnames: strings needed for legends and savenames
-  // state_id: map to identify which distinct states are included
-  int n_states, nparam[3] = {0};
+  // state_id: map to determine which f_beta to use
+  int n_states, nparam[4] = {0};
   vector <int> n_pts;
   vector <vector <int> > norm_att, nuis_att;
   vector <vector <double> > datasigma;
@@ -50,7 +50,7 @@ public:
   // (e)fitpar: results of the fit (param +/- e_param)
   // sigpar: pars in sig(pars)
   int ndf;
-  double ptmmin = 2.;
+  double ptmmin = 2.5;
   double chisquare, ptN = 3, sqsN = 7000;
   string fitresname = "fit.txt";
   vector <double> fitpar, efitpar, sigpar;
@@ -151,7 +151,7 @@ public:
       auxnames[1].push_back(saux[1]);
       auxnames[2].push_back(parseString(saux[saux.size()-1], ".")[0]);
 
-      // fill the state <-> id map
+      // fill the state <-> id map (for f_beta)
       if(id == 0) 
 	state_id[i_state] = auxnames[1][id];
       else if(auxnames[1][id] != auxnames[1][id-1]) {
@@ -298,10 +298,10 @@ public:
   // fit function
   double myFunction(double *par) {
     //first calculate const normalization
-    int len = nparam[1] - 1 + 5;
+    int len = 8;
     sigpar.resize(len);
     // sigpar: [sqs/M, xi, y, L, M, beta, rho, delta]
-    
+
     for(int i = 0; i < len; i++) {
       sigpar[i] = 1;
     }
@@ -347,7 +347,7 @@ public:
 
     // add factors for the nuisance parameters
     for(int i = 0; i < nparam[2]; i++) {
-      chisq = ((par[i+nparam[0]+nparam[1]] - 1.) / nuis[i].normunc) * ((par[i+nparam[0]+nparam[1]] - 1.) / nuis[i].normunc);
+      chisq = ((par[i+nparam[0]+nparam[1]] - 1) / nuis[i].normunc) * ((par[i+nparam[0]+nparam[1]] - 1) / nuis[i].normunc);
       sum += chisq;
     }
 
@@ -478,14 +478,13 @@ public:
     double pred, chisq, sum = 0, ratio, lumibr;
 
     // resize sigpar and fill it appropriately
-    int len = nparam[1] - 1 + 5;
+    int len = 8;
     sigpar.resize(len);
     
     for(int i = 0; i < len; i++)
       sigpar[i] = 1;
     sigpar[6] = fitpar[nparam[0]];
     sigpar[7] = fitpar[nparam[0]+1];
-    
   }
 
   void plotempty(int nsets, int *sets) {
@@ -499,7 +498,7 @@ public:
     double sqrts = stof(saux[0]);
     if(saux.size() > 1)
       sqrts += stof(saux[1])*pow(10,-saux[1].size());
-    
+
     aRange(auxnames[0][sets[0]], auxnames[1][sets[0]], sqrts, posif);
 
     TCanvas *c = new TCanvas("title", "name", 700, 700);
@@ -580,7 +579,7 @@ public:
     double lumibr, cs;
     string savename;
     ofstream tex;
-
+    
     // attribute axis range based on dataset
     double posif[4];
     
@@ -618,10 +617,11 @@ public:
 	for(int i = 0; i < norm_att[id].size(); i++)
 	  sigpar[3] *= fitpar[norm_att[id][i]];
 	lumibr = 1.;
-	for(int i = 0; i < nuis_att[id].size(); i++)
+	for(int i = 0; i < nuis_att[id].size(); i++) {
 	  lumibr *= fitpar[nuis_att[id][i]+nparam[0]+nparam[1]];
-
-	// get sqrt(s) / M and MQQ, and beta
+	}
+	
+	// get sqrt(s) / M, MQQ and beta
 	sigpar[0] = datasigma[9][counter]/datasigma[0][counter];
 	sigpar[4] = datasigma[0][counter];
         sigpar[5] = fitpar[nparam[0]+2+(int)datasigma[11][counter]];
@@ -651,7 +651,7 @@ public:
 	    pts += 1;
 	  }
 	}
-	
+	  
 	mkrStyle = getStyle(auxnames[0][id]);
 	
 	// data plots defined and drawn
@@ -689,7 +689,7 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6])", ptmmin, 49.9);
+	f[i_set] = new TF1("cs fit", "sigplot([0], x, [1], [2], [3], [4], [5], [6])", ptmmin, 149.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
@@ -705,13 +705,12 @@ public:
     tex << setprecision(2) << fixed << datasigma[9][counter-1]/1000 << " TeV " << auxnames[0][id] << " " << auxnames[1][id]  << " & " <<  pts << " & " << setprecision(1) << fixed << chis << " & ";
     if(pts > 0) tex << chis/(double)pts;
     tex << " \\\\" << endl;
-    
+
     // text on the plot
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("#beta = %.2f", sigpar[5]));
     
@@ -785,7 +784,6 @@ public:
     TLatex lp;
     lp.SetTextSize(0.03);
     lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lp.DrawLatex(xpos, getPos(-9, 9, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("#beta = %.2f", sigpar[5]));
 
@@ -826,7 +824,6 @@ public:
     TLatex ld;
     ld.SetTextSize(0.03);
     ld.DrawLatex(xpos, getPos(1, -1, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
-    //ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     ld.DrawLatex(xpos, getPos(-1, 1, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     ld.DrawLatex(xpos, getPos(1, -1, 3./20, 0), Form("#beta = %.2f", sigpar[5]));
 
@@ -839,7 +836,7 @@ public:
     c->SaveAs(saved);
 
     tex.close();
-
+    
     c->Destructor();
   }
   
@@ -859,6 +856,7 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
+			     "L_{ATLAS,\\Upsilon}",
 			     "\\rho",
 			     "\\delta",
 			     "\\beta_{J/\\psi}",
