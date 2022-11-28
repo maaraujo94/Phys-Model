@@ -3,7 +3,7 @@
 import os
 
 loc = ["check_0_universal", "check_1_beta", "check_2_fbeta"]
-plots = ["jpsi_5_ATLAS", "jpsi_13_CMS", "psi2_13_CMS", "ups2_13_CMS", "ups3_7_CMS"]
+plots = ["jpsi_5_ATLAS", "jpsi_13_CMS", "psi2_13_CMS", "ups1_7_CMS", "ups2_13_CMS", "ups3_7_CMS"]
 
 for i_l, l in enumerate(loc):
     for p in plots:

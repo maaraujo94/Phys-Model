@@ -6,7 +6,7 @@ norm L_ups1 6.9e0 0
 norm L_ups2 1.1e1 0
 norm L_ups3 1.1e1 0
 norm L_ATLAS_ups 1.5 0
-shape beta_1 2. 0.5 1
+shape beta_1 2. 0.5 0
 shape beta_2 3. 0.25 0
 shape rho 2 0.25 1
 shape delta 0 0.5 1
