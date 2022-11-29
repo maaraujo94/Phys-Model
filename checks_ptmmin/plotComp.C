@@ -111,7 +111,7 @@ void plotComp()
     lc.DrawLatex(g_chi->GetX()[i], g_chi->GetY()[i]+0.1, Form("%.0f/%.0f", chisquare[i], ndf[i]));
   }  
 
-  c->SaveAs("chi2.pdf");
+  c->SaveAs("plots/chi2.pdf");
   c->Clear();
 
   TH1F *fc2 = c->DrawFrame(1, 2.5, 4.5, 3.5);
@@ -124,7 +124,7 @@ void plotComp()
   g_beta->SetMarkerSize(.75);
   g_beta->Draw("psame");
 
-  c->SaveAs("beta.pdf");
+  c->SaveAs("plots/beta.pdf");
   c->Clear();
 
   TH1F *fc3 = c->DrawFrame(1, 0, 4.5, 0.55);
@@ -152,7 +152,7 @@ void plotComp()
 
   leg->Draw();
 
-  c->SaveAs("f_beta.pdf");
+  c->SaveAs("plots/f_beta.pdf");
   c->Clear();
 
   TH1F *fc4 = c->DrawFrame(1, 0, 4.5, 2.6);
@@ -174,7 +174,7 @@ void plotComp()
 
   leg->Draw();
   
-  c->SaveAs("L_QQ.pdf");
+  c->SaveAs("plots/L_QQ.pdf");
   c->Clear();
 
   c->SetLogy();
@@ -192,7 +192,7 @@ void plotComp()
   }  
 
   
-  c->SaveAs("chiP.pdf");
+  c->SaveAs("plots/chiP.pdf");
   c->Clear();
 
  
