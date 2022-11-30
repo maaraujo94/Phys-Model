@@ -180,7 +180,7 @@ public:
 	// position code:
 	/* [0] = mass, [1] = yi, [2] = yf, [3] = pT/M, [4] = pTi/M, [5] = pTf/M
 	   [6] = sigma*mass/norm, [7] = e(sigma), [8] = K(pol), [9] = sqrt(s)
-	   [10] = stateid, [11] = Q state id for f_beta	 */
+	   [10] = stateid, [11] = Q state id for f_beta, [12] = xi cutoff	 */
 
 	for(int j = 0; j < n_pts[id]; j++) {
 	  for(int i = 0; i < 12; i++) {

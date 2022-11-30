@@ -7,8 +7,8 @@
 
 # 1) call shell command to fit, get plots, then save everything in a folder
 
-echo "doing plotting"
-com="c_test.C(0)"
+echo "doing fitting"
+com="c_test.C(1)"
 
 root -l <<EOF
 gSystem->Load("/home/mariana/local/lib/libLHAPDF.so");
