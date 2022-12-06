@@ -72,6 +72,8 @@ public:
   // histogram of percent deviation and fitted + unfitted data pts
   TH1F *h_dev = new TH1F("h_dev", "Fit percentage deviation", 100, -50, 50);
   TH1F *h_pulls = new TH1F("h_pulls", "Fit pulls", 100, -5, 5);
+  TH1F *h_devP = new TH1F("h_devP", "Fit percentage deviation (absolute value)", 50, 0, 50);
+  TH1F *h_pullsP = new TH1F("h_pullsP", "Fit pulls (absolute value)", 50, 0, 5);
   TH2F *h_dp = new TH2F("h_dp", "Fit deviation vs pulls", 100, -3, 3, 100, -3, 3);
   vector <TH2F> h_dp_s;
   string det_name[4] = {"ATLAS", "CDF", "CMS", "LHCb"};
@@ -659,7 +661,7 @@ public:
 	// cycle over all points of [id]-state, to plot data and later pulls
 	for(int j = 0; j < n_pts[id]; j++) {
 	  // filling arrays for data plotting
-	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
+	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
 	  datapts[1][j] = datasigma[6][j+counter]*lumibr;
 	  datapts[2][j] = datasigma[7][j+counter]*lumibr;
 	  datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
@@ -675,6 +677,8 @@ public:
 	  if(datasigma[4][j+counter] > datasigma[12][j+counter]) {
 	    h_dev->Fill(devpts[0][j]*100.);
 	    h_pulls->Fill(pullpts[0][j]);
+	    h_devP->Fill(abs(devpts[0][j])*100.);
+	    h_pullsP->Fill(abs(pullpts[0][j]));
 	    h_dp->Fill(devpts[0][j]*100./15., pullpts[0][j]);
 	    h_dp_s[datasigma[11][j+counter]].Fill(devpts[0][j]*100./15., pullpts[0][j]);
 	    for(int i_d = 0; i_d < 4; i_d++)
@@ -718,10 +722,10 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", 0, 149.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8], [9], [10]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8], [9], [10])", 0, 149.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-	for(int j = 2; j < 9; j++)
+	for(int j = 2; j < 11; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
 	f[i_set]->SetLineColor(getCol(i_set));
@@ -880,12 +884,9 @@ public:
     TCanvas *c = new TCanvas("title", "name", 700, 700);
     c->SetRightMargin(0.03);
 
-    //h_dev->SetStats(0);
     h_dev->GetXaxis()->SetTitle("deviation (%)");
     h_dev->GetYaxis()->SetTitle("Nr points");
     h_dev->GetYaxis()->SetTitleOffset(1.3);
-    //h_dev->GetYaxis()->SetRangeUser(0, 2);
-    //h_dev->SetLineColor(kBlack);
     h_dev->Draw("histo");
 
     double xmax = h_dev->GetXaxis()->GetBinUpEdge(h_dev->GetNbinsX());
@@ -901,12 +902,9 @@ public:
     c->SaveAs("plots/hist_dev.pdf");
     c->Clear();
 
-    //h_pulls->SetStats(0);
     h_pulls->GetXaxis()->SetTitle("pulls");
     h_pulls->GetYaxis()->SetTitle("Nr points");
     h_pulls->GetYaxis()->SetTitleOffset(1.3);
-    //h_pulls->GetYaxis()->SetRangeUser(0, 2);
-    //h_pulls->SetLineColor(kBlack);
     h_pulls->Draw("histo");
 
     xmax = h_pulls->GetXaxis()->GetBinUpEdge(h_pulls->GetNbinsX());
@@ -922,14 +920,47 @@ public:
     c->SaveAs("plots/hist_pulls.pdf");
     c->Clear();
 
+    h_devP->GetXaxis()->SetTitle("|deviation| (%)");
+    h_devP->GetYaxis()->SetTitle("Nr points");
+    h_devP->GetYaxis()->SetTitleOffset(1.3);
+    h_devP->Draw("histo");
+
+    xmax = h_devP->GetXaxis()->GetBinUpEdge(h_devP->GetNbinsX());
+    xmin = h_devP->GetXaxis()->GetBinLowEdge(1);
+    xpos = getPos(xmin, xmax, 0.5, 0);
+    
+    //text on the plot
+    TLatex ldP;
+    ldP.SetTextSize(0.03);
+    ldP.DrawLatex(xpos, getPos(h_devP->GetMinimum(), h_devP->GetMaximum(), 4.5/5., 0), Form("%d points fitted", n_fit));
+    ldP.DrawLatex(xpos, getPos(h_devP->GetMinimum(), h_devP->GetMaximum(), 4./5., 0), Form("%d points not fitted", n_unfit));
+
+    c->SaveAs("plots/hist_devP.pdf");
+    c->Clear();
+
+    h_pullsP->GetXaxis()->SetTitle("|pulls|");
+    h_pullsP->GetYaxis()->SetTitle("Nr points");
+    h_pullsP->GetYaxis()->SetTitleOffset(1.3);
+    h_pullsP->Draw("histo");
+
+    xmax = h_pullsP->GetXaxis()->GetBinUpEdge(h_pullsP->GetNbinsX());
+    xmin = h_pullsP->GetXaxis()->GetBinLowEdge(1);
+    xpos = getPos(xmin, xmax, 0.5, 0);
+    
+    //text on the plot
+    TLatex lpP;
+    lpP.SetTextSize(0.03);
+    lpP.DrawLatex(xpos, getPos(h_pullsP->GetMinimum(), h_pullsP->GetMaximum(), 4.5/5., 0), Form("%d points fitted", n_fit));
+    lpP.DrawLatex(xpos, getPos(h_pullsP->GetMinimum(), h_pullsP->GetMaximum(), 4./5., 0), Form("%d points not fitted", n_unfit));
+
+    c->SaveAs("plots/hist_pullsP.pdf");
+    c->Clear();
+
     c->SetRightMargin(0.1);
 
     h_dp->SetStats(0);
     h_dp->GetXaxis()->SetTitle("deviation / 15%");
     h_dp->GetYaxis()->SetTitle("pulls");
-    //    h_dp->GetYaxis()->SetTitleOffset(1.3);
-    //h_dp->GetYaxis()->SetRangeUser(0, 2);
-    //h_dp->SetLineColor(kBlack);
     h_dp->Draw("colz");
 
     c->SaveAs("plots/hist_dp.pdf");
@@ -986,6 +1017,8 @@ public:
 			     "\\beta_2",
 			     "\\rho",
 			     "\\delta",
+			     "\\kappa_2",
+			     "\\kappa_4",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
 			     "BR(\\chi_{c1}\\rightarrow J/\\psi\\gamma)",
 			     "BR(\\chi_{c2}\\rightarrow J/\\psi\\gamma)",

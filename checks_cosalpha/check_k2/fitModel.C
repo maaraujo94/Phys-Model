@@ -365,6 +365,7 @@ public:
       sum += chisq;
     }
 
+    cout << sum << endl;
     return sum;
   }
 
@@ -661,7 +662,7 @@ public:
 	// cycle over all points of [id]-state, to plot data and later pulls
 	for(int j = 0; j < n_pts[id]; j++) {
 	  // filling arrays for data plotting
-	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
+	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
 	  datapts[1][j] = datasigma[6][j+counter]*lumibr;
 	  datapts[2][j] = datasigma[7][j+counter]*lumibr;
 	  datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
@@ -722,10 +723,10 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", 0, 149.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8], [9], [10]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8], [9], [10])", 0, 149.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-	for(int j = 2; j < 9; j++)
+	for(int j = 2; j < 11; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
 	f[i_set]->SetLineColor(getCol(i_set));
@@ -1017,6 +1018,8 @@ public:
 			     "\\beta_2",
 			     "\\rho",
 			     "\\delta",
+			     "\\kappa_2",
+			     "\\kappa_4",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
 			     "BR(\\chi_{c1}\\rightarrow J/\\psi\\gamma)",
 			     "BR(\\chi_{c2}\\rightarrow J/\\psi\\gamma)",

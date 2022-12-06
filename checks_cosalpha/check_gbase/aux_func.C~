@@ -93,7 +93,7 @@ double alpha(double q2)
 }
 
 //the function to be integrated
-//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: cosalpha, [4]: M, [5]: beta, [6]: rho, [7]: delta
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: cosalpha, [4]: M, [5]: beta, [6]: rho, [7]: delta, [8]: k2, [9]: k4
 double integf(double *par)
 {
   double eps = 1e-5;
@@ -115,10 +115,8 @@ double integf(double *par)
   double fx2 = pdf_new(x2, s_hat, s);
 
   //the dsigma/dt^star function multiplied by mass-normalized jacobian
-  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the E format
-  //double gfunc = ( pow( sqstar+2.*pstar*par[3], -par[6] ) + pow( sqstar-2.*pstar*par[3], -par[6] ) ) * ( pow( sqstar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the s format
-  //double kappa = 1;
-  //double gfunc = ( pow( 1. + pow(sqstar,-kappa) + par[3], -par[6] ) + pow( 1. +pow(sqstar,-kappa) - par[3], -par[6] ) ) * ( pow( 1 + pow(sqstar,-kappa), par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]); // the kappa format
+  double x_g = pstar*par[3]/Estar;
+  double gfunc = ( pow( Estar+pstar*par[3], -par[6] ) + pow( Estar-pstar*par[3], -par[6] ) ) * ( pow( Estar, par[6] ) / 2.) * pow( 1 + eps - par[3]*par[3], -par[7]) * (1 + par[8]*pow(x_g,2) + par[9]*pow(x_g,4));
   double hfunc = pow(sstar, -par[5]);
  
   double dsdt = gfunc * hfunc;
@@ -128,7 +126,7 @@ double integf(double *par)
 }
 
 //the function that performs the integration, corresponds to dsigma/dxidy
-//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: rho, [7]: delta
+//par-> [0]: sqrt(s)/M, [1]: xi, [2]: y, [3]: L, [4]: M, [5]: beta, [6]: rho, [7]: delta, [8]: k2, [9]: k4
 double sig(vector <double> par)
 {
   double sum = 0;
@@ -138,7 +136,7 @@ double sig(vector <double> par)
   int n_cosa = (2.*cosa_lim)/d_cosa;
 
   double cosa = -cosa_lim;
-  double pars[8]={par[0], par[1], par[2], cosa, par[4], par[5], par[6], par[7]};
+  double pars[8]={par[0], par[1], par[2], cosa, par[4], par[5], par[6], par[7], par[8], par[9]};
   
   for(int i=0; i <= n_cosa; i++) {
     pars[3] = cosa;
@@ -150,11 +148,9 @@ double sig(vector <double> par)
   double sNorm = sqsNorm * sqsNorm;
   double eNorm = (sNorm+1)/(2*sqsNorm);
   double pNorm = (sNorm-1)/(2*sqsNorm);
-  
-  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // E form
-  ///double gNorm = ( pow( sqsNorm+2.*pNorm*cosaNorm, -par[6] ) + pow( sqsNorm-2.*pNorm*cosaNorm, -par[6] ) ) * ( pow( sqsNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // s form
-  //double kappa = 1.;
-  //double gNorm = ( pow( 1. + pow(sqsNorm,-kappa) + cosaNorm, -par[6] ) + pow( 1. +pow(sqsNorm,-kappa) - cosaNorm, -par[6] ) ) * ( pow( 1 + pow(sqsNorm,-kappa), par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]); // kappa format
+
+  double x_g = pNorm*cosaNorm/eNorm;
+  double gNorm = ( pow( eNorm+pNorm*cosaNorm, -par[6] ) + pow( eNorm-pNorm*cosaNorm, -par[6] ) ) * ( pow( eNorm, par[6] ) / 2.) * pow( 1 + eps - cosaNorm*cosaNorm, -par[7]) * (1 + par[8]*pow(x_g,2) + par[9]*pow(x_g,4));
  double hNorm = pow(sNorm, -par[5]);
 
   double nVal = gNorm*hNorm;
@@ -165,15 +161,15 @@ double sig(vector <double> par)
 
 //sigma function for plotting
 //takes params individually rather than through pointer
-double sigplot(double sqs_M, double xi, double y, double L, double M, double beta, double rho, double delta)
+double sigplot(double sqs_M, double xi, double y, double L, double M, double beta, double rho, double delta, double k2, double k4)
 {
-  vector <double> pars = {sqs_M, xi, y, L, M, beta, rho, delta};
+  vector <double> pars = {sqs_M, xi, y, L, M, beta, rho, delta, k2, k4};
   return sig(pars);
 }
 
 double sig_wrapper(vector <double> par)
 {
-  vector <double> pars = {par[0], par[1], par[2], par[3], par[4], par[6], par[8], par[9]};
+  vector <double> pars = {par[0], par[1], par[2], par[3], par[4], par[6], par[8], par[9], par[10], par[11]};
   double c1 = sig(pars);
   pars[5] = par[7];
   double c2 = sig(pars);
@@ -182,7 +178,7 @@ double sig_wrapper(vector <double> par)
 
 //calculates the average pT/M of a bin by weighing it with the model cs
 //uint and lint are the upper (sigma*pT/M) and lower (sigma) integrals
-double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par, double fbeta)
+double avgptm(double lbound, double ubound, double lybound, double uybound, vector <double> par)
 {
   double uint = 0, lint = 0, dpt = ubound-lbound, dy = uybound-lybound;
   int npt = 8, ny = 4;
