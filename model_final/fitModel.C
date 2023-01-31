@@ -365,6 +365,7 @@ public:
       sum += chisq;
     }
 
+    cout << sum << endl;
     return sum;
   }
 
@@ -447,6 +448,8 @@ public:
       if(i == 2) fit->FixParameter(i+nparam[0]+nparam[1]+nparam[2]);
     }
 
+    fit->ExecuteCommand("MIGRAD",0,0);
+    fit->ExecuteCommand("MIGRAD",0,0);
     fit->ExecuteCommand("MIGRAD",0,0);
  
     fitpar.resize(npartot);
@@ -548,7 +551,7 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 0.625, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+2)/8, 1), Form("#chi^{2}/ndf = %.0f/%d = %.2f", chisquare, ndf, chisquare/(double)ndf));
     //lc.DrawLatex(xpos, getPos(posif[3], posif[1], 0.5*(nsets+3)/8, 1), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.DrawLatex(xpos, getPos(posif[1], posif[3], 1./20, 1), Form("pp %.0f TeV",  sqrts));
@@ -590,7 +593,7 @@ public:
     //text on the plot
     TLatex lp;
     lp.SetTextSize(0.03);
-    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    lp.DrawLatex(xpos, getPos(10, -10, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.2f", chisquare, ndf, chisquare/(double)ndf));
     //lp.DrawLatex(xpos, getPos(10, -10, 3./20, 0), Form("P(#chi^{2},ndf) = %.1f%%", 100*TMath::Prob(chisquare, ndf)));
     lp.DrawLatex(xpos, getPos(-10, 10, 1./20, 0), Form("pp %.0f TeV", sqrts));
     
@@ -661,7 +664,7 @@ public:
 	// cycle over all points of [id]-state, to plot data and later pulls
 	for(int j = 0; j < n_pts[id]; j++) {
 	  // filling arrays for data plotting
-	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar, fitpar[nparam[0]+nparam[1]+nparam[2]+(int)datasigma[11][j+counter]]);
+	  datapts[0][j] = avgptm(datasigma[4][j+counter], datasigma[5][j+counter], datasigma[1][j+counter], datasigma[2][j+counter], sigpar);
 	  datapts[1][j] = datasigma[6][j+counter]*lumibr;
 	  datapts[2][j] = datasigma[7][j+counter]*lumibr;
 	  datapts[3][j] = datapts[0][j] - datasigma[4][j+counter];
@@ -722,10 +725,10 @@ public:
 
 	// fit model can't be made as flexible regarding param number
 	// TODO think a bit abt how (if?) this could be improved
-	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8])", 0, 149.9);
+	f[i_set] = new TF1("cs fit", "[4]*sigplot([0], x, [1], [2], [3], [5], [7], [8], [9], [10]) + (1.-[4])*sigplot([0], x, [1], [2], [3], [6], [7], [8], [9], [10])", 0, 149.9);
 	f[i_set]->SetParameter(0, sigpar[0]);
 	f[i_set]->SetParameter(1, (datasigma[1][counter]+datasigma[2][counter])/2);
-	for(int j = 2; j < 9; j++)
+	for(int j = 2; j < 11; j++)
 	  f[i_set]->SetParameter(j, sigpar[j+1]);
 	f[i_set]->SetParameter(2, sigpar[3]*pow(10,-i_set)); // scaling the different curves
 	f[i_set]->SetLineColor(getCol(i_set));
@@ -743,7 +746,7 @@ public:
     TLatex lc;
     double xpos = getPos(posif[0], posif[2], 1./20, 0);
     lc.SetTextSize(0.03);
-    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.15, 1), Form("#chi^{2}/ndf = %.0f/%d = %.2f", chisquare, ndf, chisquare/(double)ndf));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.05, 1), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     lc.DrawLatex(xpos, getPos(posif[1]*pow(10,-(nsets-1)), posif[3], 0.1, 1), Form("f_{#beta} = %.1f%%", sigpar[5]*100));
 
@@ -821,7 +824,7 @@ public:
     //text on the plot
     TLatex lp;
     lp.SetTextSize(0.03);
-    lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.1f", chisquare, ndf, chisquare/(double)ndf));
+    lp.DrawLatex(xpos, getPos(9, -9, 1.5/20, 0), Form("#chi^{2}/ndf = %.0f/%d = %.2f", chisquare, ndf, chisquare/(double)ndf));
     lp.DrawLatex(xpos, getPos(-9, 9, 1./20, 0), Form("pp %.0f TeV", datasigma[9][counter-1]/1000.));
     lp.DrawLatex(xpos, getPos(9, -9, 3./20, 0), Form("f_{#beta} = %.1f%%", sigpar[5]*100.));
 
@@ -1012,11 +1015,20 @@ public:
 			     "L_{\\Upsilon(1S)}",
 			     "L_{\\Upsilon(2S)}",
 			     "L_{\\Upsilon(3S)}",
-			     "L_{ATLAS,\\Upsilon}",
+			     "L_{ATLAS,\\Upsilon,y_2}",
+			     "L_{CMS+ATLAS,J/\\psi}",
+			     "L_{CDF,J/\\psi}",
+			     "L_{CMS+ATLAS,\\psi(2S)}",
+			     "L_{CDF,\\psi(2S)}",
+			     "L_{CMS+ATLAS,\\Upsilon(1S)}",
+			     "L_{CMS+ATLAS,\\Upsilon(2S)}",
+			     "L_{CMS+ATLAS,\\Upsilon(3S)}",
 			     "\\beta_1",
 			     "\\beta_2",
 			     "\\rho",
 			     "\\delta",
+			     "\\kappa_2",
+			     "\\kappa_4",
 			     "BR(J/\\psi\\rightarrow\\mu^+\\mu^-)",
 			     "BR(\\chi_{c1}\\rightarrow J/\\psi\\gamma)",
 			     "BR(\\chi_{c2}\\rightarrow J/\\psi\\gamma)",
@@ -1035,13 +1047,13 @@ public:
 			     "\\mathcal L_{LHCb,7}",
 			     "\\mathcal L_{LHCb,8}",
 			     "\\mathcal L_{LHCb,13}",
-			     "f_{\\beta=2,J/\\psi}",
-			     "f_{\\beta=2,\\chi_{c1}}",
-			     "f_{\\beta=2,\\chi_{c2}}",
-			     "f_{\\beta=2,\\psi(2S)}",
-			     "f_{\\beta=2,\\Upsilon(1S)}",
-			     "f_{\\beta=2,\\Upsilon(2S)}",
-			     "f_{\\beta=2,\\Upsilon(3S)}"};
+			     "f_{\\beta_{1},J/\\psi}",
+			     "f_{\\beta_{1},\\chi_{c1}}",
+			     "f_{\\beta_{1},\\chi_{c2}}",
+			     "f_{\\beta_{1},\\psi(2S)}",
+			     "f_{\\beta_{1},\\Upsilon(1S)}",
+			     "f_{\\beta_{1},\\Upsilon(2S)}",
+			     "f_{\\beta_{1},\\Upsilon(3S)}"};
     
     // make latex file with fit parameters
     tex.open("plots/fitp.tex");
@@ -1065,7 +1077,7 @@ public:
       tex << " \\\\" << endl;
     }
     tex << "\\end{tabular}" << endl;
-    tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << setprecision(1) << fixed << chisquare << " / " << ndf << " = " << chisquare/ndf << ")}" << endl;
+    tex << "\\caption{Fit parameters ($\\chi^2$ / ndf = " << setprecision(1) << fixed << chisquare << " / " << ndf << " = " << setprecision(2) <<  chisquare/ndf << ")}" << endl;
     tex << "\\end{table}" << endl;
     tex.close();
 
